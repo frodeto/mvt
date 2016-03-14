@@ -1,0 +1,20 @@
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+dependency-reduced-pom.xml
+target/
+.idea
+.DS_Store
+*.iml
+.gradle
+.vertx
+build/
+out/
+    
+#Backup files
+*~
+lib/
