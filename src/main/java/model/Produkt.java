@@ -16,8 +16,36 @@
 
 package model;
 
+import java.util.Arrays;
+
 /**
- *
+ * Corresponds to first level of grouping in MVT
  */
 public enum Produkt {
+
+    DAIRY(1, "Melk og melkeprodukter", Kategori.DAIRY),
+    EGG(2, "Egg", Kategori.EGG),
+    POULTRY_AND_MEAT(3, "Fjørfe og kjøtt", Kategori.MEAT_OR_FISH),
+    FISH_AND_SHELLFISH(4, "Fisk og skalldyr", Kategori.MEAT_OR_FISH),
+    GRAIN_BREAD_CEREALS_ETC(5, "Korn- og bakevarer, frø og nøtter", Kategori.VEGETABLE),
+    POTATOES_FRUIT_VEGETABLES(6, "Poteter, grønnsaker, frukt og bær", Kategori.VEGETABLE),
+    SUGAR_AND_SWEETS(7, "Sukker og søte produkter\n", Kategori.VEGETABLE);
+
+
+    private Integer mvtId;
+    private String mvtName;
+    private Kategori category;
+
+    Produkt(Integer mvtId, String mvtName, Kategori category) {
+        this.mvtId = mvtId;
+        this.mvtName = mvtName;
+        this.category = category;
+    }
+
+    public static Produkt fromMvtId(final Integer mvtId) {
+        return Arrays.stream(values())
+                .filter(u -> u.mvtId.equals(mvtId))
+                .findAny()
+                .orElseThrow(() -> new IllegalArgumentException("Product with id  " + mvtId + " not supported"));
+    }
 }
