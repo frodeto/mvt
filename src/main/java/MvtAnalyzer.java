@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import model.Matvare;
+import model.FoodItem;
 import model.Nutrient;
 
 import java.util.List;
@@ -24,5 +24,5 @@ import java.util.List;
  */
 public interface MvtAnalyzer {
 
-    List<Matvare> getAboveLevel(Nutrient nutrient, Double level);
+    List<FoodItem> getAboveLevel(Nutrient nutrient, Double level);
 }

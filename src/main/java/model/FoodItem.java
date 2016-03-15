@@ -16,16 +16,20 @@
 
 package model;
 
+import java.util.Map;
+
 /**
  *
  */
-public class Matvare {
+public class FoodItem {
     private String name;
-    private Kategori kategori;
+    private ProductSubGroup productSubGroup;
+    private Map<Nutrient, Double> nutrientMap;
 
-    public Matvare(String name, Kategori kategori) {
+    public FoodItem(String name, ProductSubGroup productSubGroup, Map<Nutrient, Double> nutrientMap) {
         this.name = name;
-        this.kategori = kategori;
+        this.productSubGroup = productSubGroup;
+        this.nutrientMap = nutrientMap;
     }
 
     public String getName() {
@@ -36,11 +40,11 @@ public class Matvare {
         this.name = name;
     }
 
-    public Kategori getKategori() {
-        return kategori;
+    public ProductSubGroup getProductSubGroup() {
+        return productSubGroup;
     }
 
-    public void setKategori(Kategori kategori) {
-        this.kategori = kategori;
+    public void setProductSubGroup(ProductSubGroup productSubGroup) {
+        this.productSubGroup = productSubGroup;
     }
 }

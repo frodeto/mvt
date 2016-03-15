@@ -21,25 +21,27 @@ package model;
  */
 public enum Type {
 
-    PORK("Svinekjøtt", Kategori.MEAT_OR_FISH),
-    BEEF("Storfe", Kategori.MEAT_OR_FISH),
-    CHICKEN("Kylling", Kategori.MEAT_OR_FISH),
-    OTHER_MEAT("Annet kjøtt", Kategori.MEAT_OR_FISH),
-    OTHER("Annet", Kategori.OTHER);
+    PORK("Svinekjøtt", Category.MEAT_OR_FISH),
+    BEEF("Storfe", Category.MEAT_OR_FISH),
+    CHICKEN("Kylling", Category.MEAT_OR_FISH),
+    OTHER_MEAT("Annet kjøtt", Category.MEAT_OR_FISH),
+    MIXED("Blandet", Category.MIXED),
+    OTHER("Annet", Category.OTHER);
 
     private String navn;
+
+    private Category category;
 
     public String getNavn() {
         return navn;
     }
 
-    public Kategori getKategori() {
-        return kategori;
+    public Category getCategory() {
+        return category;
     }
 
-    private Kategori kategori;
-    Type(String navn, Kategori kategori) {
+    Type(String navn, Category category) {
         this.navn = navn;
-        this.kategori = kategori;
+        this.category = category;
     }
 }

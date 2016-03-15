@@ -26,7 +26,7 @@ import java.nio.file.Path;
  */
 public class MvtInitializer {
     public static void main(String[] args) {
-        Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015-truncated.xlsx");
+        Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015.xlsx");
         if(Files.exists(path) && Files.isReadable(path)) {
             try {
                 new XlsxReader(Files.newInputStream(path));

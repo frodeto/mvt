@@ -14,27 +14,11 @@
  * limitations under the License.
  */
 
-import com.mongodb.Block;
-import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoDatabase;
-import model.Matvare;
+import model.FoodItem;
 import model.Nutrient;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.bson.Document;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
-
-import static java.util.Arrays.asList;
 
 public class MvtJAnalyzer implements MvtAnalyzer {
 
@@ -82,7 +66,7 @@ public class MvtJAnalyzer implements MvtAnalyzer {
     }
 
 
-    public List<Matvare> getAboveLevel(Nutrient nutrient, Double level) {
+    public List<FoodItem> getAboveLevel(Nutrient nutrient, Double level) {
         return null;
     }
 }

@@ -16,7 +16,8 @@
 
 package integration;
 
-import model.Nutrient;
+import com.google.common.base.Strings;
+import model.*;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -25,9 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,58 +49,84 @@ public class XlsxReader {
             throw new XlsxReaderException("Could not open input stream " + xlsxInput.toString(), e);
         }
         mvtSheet = workbook.getSheetAt(0);
-        Map<Integer, Nutrient> columnMap;
+        Map<Integer, Nutrient> nutrientColumnMap = null;
 
         Iterator<Row> rowIterator = mvtSheet.rowIterator();
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
-            StringBuilder line = new StringBuilder();
             if (row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK).toString().equals("MatvareID")) {
-                columnMap = findNutrientColumns(row);
+                nutrientColumnMap = findNutrientColumns(row);
                 break;
             }
         }
+        if(nutrientColumnMap == null) {
+            throw new XlsxReaderException("Failed to populate nutrient column map");
+        }
+
+        ProductCategory currentProductCategory = null;
+        ProductGroup currentProductGroup = null;
+        ProductSubGroup currentProductSubGroup = null;
+        List<FoodItem> foodItems = new ArrayList<>();
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
-            //System.out.println("Row no " + row.getRowNum() + " - " + row.getCell(0));
-            if(isProduct(row)) {
+
+            if(isProductCategory(row)) {
                 System.out.println("Row no " + row.getRowNum() + " - " + row.getCell(0) + " PRODUCT: " + row.getCell(1));
+                currentProductCategory = ProductCategory.fromMvtId(getMvtId(row));
+                continue;
             }
-            else if(isProductGroup(row)) {
+            if(isProductGroup(row)) {
                 System.out.println("Row no " + row.getRowNum() + " - " + row.getCell(0) + " GROUP: " + row.getCell(1));
+                currentProductGroup = new ProductGroup(currentProductCategory, getCellAsString(row, 1));
+                continue;
             }
-            else if(isProductSubGroup(row)) {
+            if(isProductSubGroup(row)) {
                 System.out.println("Row no " + row.getRowNum() + " - " + row.getCell(0) + " SUBGROUP: " + row.getCell(1));
+                currentProductSubGroup = new ProductSubGroup(currentProductGroup, getCellAsString(row, 1));
+                continue;
             }
-            /*
-            Iterator<Cell> cellIterator = row.cellIterator();
-            while (cellIterator.hasNext()) {
-                line.append(cellIterator.next().toString()).append(" / ");
+            if(Strings.isNullOrEmpty(getCellAsString(row, 0))) {
+                continue;
             }
-            System.out.println(line.toString());
-            */
+            String matvareName = getCellAsString(row, 1);
+            Map<Nutrient, Double> nutrientMap = new HashMap<>();
+            nutrientColumnMap.forEach((k, v) -> {
+                nutrientMap.put(v, getCellAsDouble(row, k));
+            });
+            foodItems.add(new FoodItem(matvareName, currentProductSubGroup, nutrientMap));
         }
+        System.out.println("Antall matvarer funnet: " + foodItems.size());
     }
 
-    private boolean isProduct(Row row) {
-        Cell cell = row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-        cell.setCellType(Cell.CELL_TYPE_STRING);
-        Matcher matcher = PRODUCT_PATTERN.matcher(cell.toString());
+    private Integer getMvtId(Row row) {
+        return Integer.parseInt(getCellAsString(row, 0));
+    }
+
+    private boolean isProductCategory(Row row) {
+        Matcher matcher = PRODUCT_PATTERN.matcher(getCellAsString(row, 0));
         return matcher.matches();
     }
 
     private boolean isProductGroup(Row row) {
-        Cell cell = row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-        cell.setCellType(Cell.CELL_TYPE_STRING);
-        Matcher matcher = PRODUCT_GROUP_PATTERN.matcher(cell.toString());
+        Matcher matcher = PRODUCT_GROUP_PATTERN.matcher(getCellAsString(row, 0));
         return matcher.matches();
     }
 
     private boolean isProductSubGroup(Row row) {
-        Cell cell = row.getCell(0, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-        cell.setCellType(Cell.CELL_TYPE_STRING);
-        Matcher matcher = PRODUCT_SUB_GROUP_PATTERN.matcher(cell.toString());
+        Matcher matcher = PRODUCT_SUB_GROUP_PATTERN.matcher(getCellAsString(row, 0));
         return matcher.matches();
+    }
+
+    private String getCellAsString(Row row, int rowNum) {
+        Cell cell = row.getCell(rowNum, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+        cell.setCellType(Cell.CELL_TYPE_STRING);
+        return cell.toString();
+    }
+
+    private Double getCellAsDouble(Row row, int rowNum) {
+        Cell cell = row.getCell(rowNum, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+        cell.setCellType(Cell.CELL_TYPE_NUMERIC);
+        return cell.getNumericCellValue();
     }
 
     private Map<Integer, Nutrient> findNutrientColumns(Row row) {
@@ -121,6 +146,10 @@ public class XlsxReader {
     public static class XlsxReaderException extends RuntimeException {
         public XlsxReaderException(String message, Throwable cause) {
             super(message, cause);
+        }
+
+        public XlsxReaderException(String message) {
+            super(message);
         }
     }
 }

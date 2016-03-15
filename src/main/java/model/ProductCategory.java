@@ -21,28 +21,32 @@ import java.util.Arrays;
 /**
  * Corresponds to first level of grouping in MVT
  */
-public enum Produkt {
+public enum ProductCategory {
 
-    DAIRY(1, "Melk og melkeprodukter", Kategori.DAIRY),
-    EGG(2, "Egg", Kategori.EGG),
-    POULTRY_AND_MEAT(3, "Fjørfe og kjøtt", Kategori.MEAT_OR_FISH),
-    FISH_AND_SHELLFISH(4, "Fisk og skalldyr", Kategori.MEAT_OR_FISH),
-    GRAIN_BREAD_CEREALS_ETC(5, "Korn- og bakevarer, frø og nøtter", Kategori.VEGETABLE),
-    POTATOES_FRUIT_VEGETABLES(6, "Poteter, grønnsaker, frukt og bær", Kategori.VEGETABLE),
-    SUGAR_AND_SWEETS(7, "Sukker og søte produkter\n", Kategori.VEGETABLE);
+    DAIRY(1, "Melk og melkeprodukter", Category.DAIRY),
+    EGG(2, "Egg", Category.EGG),
+    POULTRY_AND_MEAT(3, "Fjørfe og kjøtt", Category.MEAT_OR_FISH),
+    FISH_AND_SHELLFISH(4, "Fisk og skalldyr", Category.MEAT_OR_FISH),
+    GRAIN_BREAD_CEREALS_ETC(5, "Korn- og bakevarer, frø og nøtter", Category.VEGETABLE),
+    POTATOES_FRUIT_VEGETABLES(6, "Poteter, grønnsaker, frukt og bær", Category.VEGETABLE),
+    SUGAR_AND_SWEETS(7, "Sukker og søte produkter", Category.VEGETABLE),
+    BUTTER_AND_OILS(8, "Margarin, smør, matolje o.l.", Category.MIXED),
+    BEVERAGES(9, "Drikke", Category.OTHER),
+    DISHES_AND_PRODUCTS(10, "Diverse retter, produkter og ingredienser", Category.MIXED),
+    INFANT_FOODS(11, "Spedbarnsmat", Category.MIXED);
 
 
     private Integer mvtId;
     private String mvtName;
-    private Kategori category;
+    private Category category;
 
-    Produkt(Integer mvtId, String mvtName, Kategori category) {
+    ProductCategory(Integer mvtId, String mvtName, Category category) {
         this.mvtId = mvtId;
         this.mvtName = mvtName;
         this.category = category;
     }
 
-    public static Produkt fromMvtId(final Integer mvtId) {
+    public static ProductCategory fromMvtId(final Integer mvtId) {
         return Arrays.stream(values())
                 .filter(u -> u.mvtId.equals(mvtId))
                 .findAny()

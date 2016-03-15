@@ -19,7 +19,7 @@ package model;
 /**
  *
  */
-public enum Kategori {
-    VEGETABLE, MEAT_OR_FISH, EGG, DAIRY, OTHER;
+public enum Category {
+    VEGETABLE, MEAT_OR_FISH, EGG, DAIRY, MIXED, OTHER;
 
 }

@@ -19,21 +19,21 @@ package model;
 /**
  *
  */
-public class ProduktUnderGruppe {
-    private ProduktGruppe produktGruppe;
+public class ProductSubGroup {
+    private ProductGroup productGroup;
     private String name;
 
-    public ProduktUnderGruppe(ProduktGruppe produktGruppe, String name) {
-        this.produktGruppe = produktGruppe;
+    public ProductSubGroup(ProductGroup productGroup, String name) {
+        this.productGroup = productGroup;
         this.name = name;
     }
 
-    public ProduktGruppe getProduktGruppe() {
-        return produktGruppe;
+    public ProductGroup getProductGroup() {
+        return productGroup;
     }
 
-    public void setProduktGruppe(ProduktGruppe produktGruppe) {
-        this.produktGruppe = produktGruppe;
+    public void setProductGroup(ProductGroup productGroup) {
+        this.productGroup = productGroup;
     }
 
     public String getName() {
@@ -49,16 +49,16 @@ public class ProduktUnderGruppe {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ProduktUnderGruppe that = (ProduktUnderGruppe) o;
+        ProductSubGroup that = (ProductSubGroup) o;
 
-        if (produktGruppe != that.produktGruppe) return false;
+        if (productGroup != that.productGroup) return false;
         return name.equals(that.name);
 
     }
 
     @Override
     public int hashCode() {
-        int result = produktGruppe.hashCode();
+        int result = productGroup.hashCode();
         result = 31 * result + name.hashCode();
         return result;
     }
