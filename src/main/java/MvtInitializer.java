@@ -48,7 +48,7 @@ public class MvtInitializer {
         }
 
         List<FoodItem> foodItems = new XlsxReader(xlsxInputStream).read();
-        DbWriter dbWriter = new MongoWriter().createDb();
+        DbWriter dbWriter = new MongoWriter().initDb();
         dbWriter.writeItems(foodItems);
     }
 }

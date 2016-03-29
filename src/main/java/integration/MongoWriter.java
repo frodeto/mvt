@@ -55,7 +55,7 @@ public class MongoWriter implements DbWriter {
     }
 
     @Override
-    public MongoWriter createDb() {
+    public MongoWriter initDb() {
         LocalDate localDate = LocalDate.now();
         dbName= Db.DB_NAME + localDate.format(DateTimeFormatter.BASIC_ISO_DATE);
         MongoDatabase db = mongoClient.getDatabase(dbName);
@@ -64,6 +64,8 @@ public class MongoWriter implements DbWriter {
         if(count > 0) {
             db.getCollection(Db.MVT_MAIN_TABLE_NAME).drop();
         }
+        MongoCollection<Document> collection = db.getCollection(Db.IMPORT);
+        collection.insertOne(new Document("timestamp", localDate));
         return this;
     }
 

@@ -144,11 +144,11 @@ public class XlsxReader {
     }
 
     public static class XlsxReaderException extends RuntimeException {
-        public XlsxReaderException(String message, Throwable cause) {
+        XlsxReaderException(String message, Throwable cause) {
             super(message, cause);
         }
 
-        public XlsxReaderException(String message) {
+        XlsxReaderException(String message) {
             super(message);
         }
     }

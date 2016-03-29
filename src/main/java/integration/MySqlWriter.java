@@ -20,23 +20,64 @@ import model.FoodItem;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 
 /**
  *
  */
 public class MySqlWriter implements DbWriter {
-    private static String jdbcDriver = "com.mysql.jdbc.Driver";
+    private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+    private Connection connection;
+
+    public MySqlWriter() {
+        try {
+            Class.forName(JDBC_DRIVER);
+            connection = DriverManager.getConnection("jdbc:mysql://localhost/" + Db.DB_NAME + "?user=root&password=admin");
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new MySqlWriterException("Error connecting to database", e);
+        }
+    }
 
     @Override
-    public DbWriter createDb() {
+    public DbWriter initDb() {
+        if(!mvtDbExists()) {
+            throw new MySqlWriterException("Could not find mvt database");
+        }
+
+        // TODO create tables
         return this;
+    }
+
+    private boolean mvtDbExists() {
+        try {
+            ResultSet resultSet = connection.getMetaData().getCatalogs();
+            while (resultSet.next()) {
+                if(Db.DB_NAME.equals(resultSet.getString(1))) {
+                    resultSet.close();
+                    return true;
+                }
+            }
+            resultSet.close();
+            return true;
+        } catch (SQLException e) {
+            throw new MySqlWriterException("Error reading metadata from mysql", e);
+        }
     }
 
     @Override
     public void writeItems(List<FoodItem> items) {
 
+    }
+
+    private static class MySqlWriterException extends RuntimeException {
+        MySqlWriterException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        MySqlWriterException(String message) {
+            super(message);
+        }
     }
 }

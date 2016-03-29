@@ -24,7 +24,7 @@ import java.util.List;
  *
  */
 public interface DbWriter {
-    DbWriter  createDb();
+    DbWriter initDb();
 
     void writeItems(List<FoodItem> items);
 }
