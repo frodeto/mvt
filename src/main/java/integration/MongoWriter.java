@@ -57,7 +57,7 @@ public class MongoWriter implements DbWriter {
     @Override
     public MongoWriter createDb() {
         LocalDate localDate = LocalDate.now();
-        dbName= "mvt" + localDate.format(DateTimeFormatter.BASIC_ISO_DATE);
+        dbName= Db.DB_NAME + localDate.format(DateTimeFormatter.BASIC_ISO_DATE);
         MongoDatabase db = mongoClient.getDatabase(dbName);
         long count = db.getCollection(Db.MVT_MAIN_TABLE_NAME).count();
         logger.info("count: " + count);
