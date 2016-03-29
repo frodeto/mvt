@@ -34,21 +34,23 @@ import java.util.regex.Pattern;
  * Reading mvt data from xlsx (which is currently the way it is distributed).
  */
 public class XlsxReader {
-    public static final Pattern PRODUCT_PATTERN = Pattern.compile("^\\d+(?!\\.)");
-    public static final Pattern PRODUCT_GROUP_PATTERN = Pattern.compile("^\\d+\\.\\d{1,2}(?!\\.)");
-    public static final Pattern PRODUCT_SUB_GROUP_PATTERN = Pattern.compile("^\\d+\\.\\d+\\.\\d+(?!\\.)");
-    final Logger logger = LoggerFactory.getLogger(XlsxReader.class);
+    private static final Pattern PRODUCT_PATTERN = Pattern.compile("^\\d+(?!\\.)");
+    private static final Pattern PRODUCT_GROUP_PATTERN = Pattern.compile("^\\d+\\.\\d{1,2}(?!\\.)");
+    private static final Pattern PRODUCT_SUB_GROUP_PATTERN = Pattern.compile("^\\d+\\.\\d+\\.\\d+(?!\\.)");
+    private final Logger logger = LoggerFactory.getLogger(XlsxReader.class);
 
-    private XSSFSheet mvtSheet;
+    private XSSFWorkbook workbook;
 
     public XlsxReader(InputStream xlsxInput) {
-        XSSFWorkbook workbook;
         try {
             workbook = new XSSFWorkbook(xlsxInput);
         } catch (IOException e) {
             throw new XlsxReaderException("Could not open input stream " + xlsxInput.toString(), e);
         }
-        mvtSheet = workbook.getSheetAt(0);
+    }
+
+    public List<FoodItem> read() {
+        XSSFSheet mvtSheet = workbook.getSheetAt(0);
         Map<Integer, Nutrient> nutrientColumnMap = null;
 
         Iterator<Row> rowIterator = mvtSheet.rowIterator();
@@ -71,17 +73,17 @@ public class XlsxReader {
             Row row = rowIterator.next();
 
             if(isProductCategory(row)) {
-                System.out.println("Row no " + row.getRowNum() + " - " + row.getCell(0) + " PRODUCT: " + row.getCell(1));
+                logger.info("Row no " + row.getRowNum() + " - " + row.getCell(0) + " PRODUCT: " + row.getCell(1));
                 currentProductCategory = ProductCategory.fromMvtId(getMvtId(row));
                 continue;
             }
             if(isProductGroup(row)) {
-                System.out.println("Row no " + row.getRowNum() + " - " + row.getCell(0) + " GROUP: " + row.getCell(1));
+                logger.info("Row no " + row.getRowNum() + " - " + row.getCell(0) + " GROUP: " + row.getCell(1));
                 currentProductGroup = new ProductGroup(currentProductCategory, getCellAsString(row, 1));
                 continue;
             }
             if(isProductSubGroup(row)) {
-                System.out.println("Row no " + row.getRowNum() + " - " + row.getCell(0) + " SUBGROUP: " + row.getCell(1));
+                logger.info("Row no " + row.getRowNum() + " - " + row.getCell(0) + " SUBGROUP: " + row.getCell(1));
                 currentProductSubGroup = new ProductSubGroup(currentProductGroup, getCellAsString(row, 1));
                 continue;
             }
@@ -90,12 +92,11 @@ public class XlsxReader {
             }
             String matvareName = getCellAsString(row, 1);
             Map<Nutrient, Double> nutrientMap = new HashMap<>();
-            nutrientColumnMap.forEach((k, v) -> {
-                nutrientMap.put(v, getCellAsDouble(row, k));
-            });
+            nutrientColumnMap.forEach((k, v) -> nutrientMap.put(v, getCellAsDouble(row, k)));
             foodItems.add(new FoodItem(matvareName, currentProductSubGroup, nutrientMap));
         }
-        System.out.println("Antall matvarer funnet: " + foodItems.size());
+        logger.info("Antall matvarer funnet: " + foodItems.size());
+        return foodItems;
     }
 
     private Integer getMvtId(Row row) {
@@ -141,7 +142,6 @@ public class XlsxReader {
         }
         return columnMap;
     }
-
 
     public static class XlsxReaderException extends RuntimeException {
         public XlsxReaderException(String message, Throwable cause) {

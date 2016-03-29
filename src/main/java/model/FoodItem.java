@@ -47,4 +47,12 @@ public class FoodItem {
     public void setProductSubGroup(ProductSubGroup productSubGroup) {
         this.productSubGroup = productSubGroup;
     }
+
+    public Map<Nutrient, Double> getNutrientMap() {
+        return nutrientMap;
+    }
+
+    public void setNutrientMap(Map<Nutrient, Double> nutrientMap) {
+        this.nutrientMap = nutrientMap;
+    }
 }

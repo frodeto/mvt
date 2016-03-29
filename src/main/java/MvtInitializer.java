@@ -14,29 +14,41 @@
  * limitations under the License.
  */
 
+import integration.DbWriter;
+import integration.MongoWriter;
 import integration.XlsxReader;
+import model.FoodItem;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  *
  */
 public class MvtInitializer {
     public static void main(String[] args) {
-        Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015.xlsx");
+        Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015-truncated.xlsx");
+        InputStream xlsxInputStream = null;
         if(Files.exists(path) && Files.isReadable(path)) {
             try {
-                new XlsxReader(Files.newInputStream(path));
+                xlsxInputStream = Files.newInputStream(path);
             } catch (IOException e) {
+                System.err.println("Could not read " + path.toString());
                 e.printStackTrace();
+                System.exit(1);
             }
         }
         else {
             System.err.println("Could not find resource " + path.toString());
             System.exit(1);
         }
+
+        List<FoodItem> foodItems = new XlsxReader(xlsxInputStream).read();
+        DbWriter dbWriter = new MongoWriter().createDb();
+        dbWriter.writeItems(foodItems);
     }
 }
