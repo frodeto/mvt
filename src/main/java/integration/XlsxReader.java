@@ -69,6 +69,7 @@ public class XlsxReader {
         ProductGroup currentProductGroup = null;
         ProductSubGroup currentProductSubGroup = null;
         List<FoodItem> foodItems = new ArrayList<>();
+        int incrementalId = 0;
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
 
@@ -93,7 +94,7 @@ public class XlsxReader {
             String matvareName = getCellAsString(row, 1);
             Map<Nutrient, Double> nutrientMap = new HashMap<>();
             nutrientColumnMap.forEach((k, v) -> nutrientMap.put(v, getCellAsDouble(row, k)));
-            foodItems.add(new FoodItem(matvareName, currentProductSubGroup, nutrientMap));
+            foodItems.add(new FoodItem(++incrementalId, matvareName, currentProductSubGroup, nutrientMap));
         }
         logger.info("Antall matvarer funnet: " + foodItems.size());
         return foodItems;

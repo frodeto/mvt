@@ -43,4 +43,7 @@ public enum MvtUnit {
                 .orElseThrow(() -> new IllegalArgumentException("Unit " + symbol + " not supported"));
     }
 
+    public String getSymbol() {
+        return symbol;
+    }
 }

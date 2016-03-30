@@ -46,9 +46,11 @@ public class MongoWriter implements DbWriter {
 
     public MongoWriter() {
         mongoClient = new MongoClient();
+        // TODO this should retrieve the latest db
         mongoClient.getUsedDatabases().stream().filter(db -> db.collectionExists(Db.IMPORT)).forEach(db -> {
             DBCollection collection = db.getCollection(Db.IMPORT);
             if (collection.count() > 0) {
+                logger.info("Import count %d setting dbName as %s", collection.count(), db.getName());
                 dbName = db.getName();
             }
         });
@@ -57,7 +59,7 @@ public class MongoWriter implements DbWriter {
     @Override
     public MongoWriter initDb() {
         LocalDate localDate = LocalDate.now();
-        dbName= Db.DB_NAME + localDate.format(DateTimeFormatter.BASIC_ISO_DATE);
+        dbName = Db.DB_NAME + localDate.format(DateTimeFormatter.BASIC_ISO_DATE);
         MongoDatabase db = mongoClient.getDatabase(dbName);
         long count = db.getCollection(Db.MVT_MAIN_TABLE_NAME).count();
         logger.info("count: " + count);
@@ -65,16 +67,17 @@ public class MongoWriter implements DbWriter {
             db.getCollection(Db.MVT_MAIN_TABLE_NAME).drop();
         }
         MongoCollection<Document> collection = db.getCollection(Db.IMPORT);
-        collection.insertOne(new Document("timestamp", localDate));
+        collection.insertOne(new Document("timestamp", localDate.format(DateTimeFormatter.BASIC_ISO_DATE)));
         return this;
     }
 
     @Override
-    public void writeItems(List<FoodItem> items) {
+    public DbWriter writeItems(List<FoodItem> items) {
         List<Document> jsonItems = items.stream().map(toDocument).collect(Collectors.<Document>toList());
         MongoDatabase db = mongoClient.getDatabase(dbName);
         MongoCollection<Document> collection = db.getCollection(Db.MVT_MAIN_TABLE_NAME);
         collection.insertMany(jsonItems);
+        return this;
     }
 
     Function<FoodItem, Document> toDocument = foodItem -> {

@@ -22,14 +22,24 @@ import java.util.Map;
  *
  */
 public class FoodItem {
+    private int id;
     private String name;
     private ProductSubGroup productSubGroup;
     private Map<Nutrient, Double> nutrientMap;
 
-    public FoodItem(String name, ProductSubGroup productSubGroup, Map<Nutrient, Double> nutrientMap) {
+    public FoodItem(int id, String name, ProductSubGroup productSubGroup, Map<Nutrient, Double> nutrientMap) {
+        this.id = id;
         this.name = name;
         this.productSubGroup = productSubGroup;
         this.nutrientMap = nutrientMap;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {

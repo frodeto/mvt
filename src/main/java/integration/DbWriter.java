@@ -26,5 +26,9 @@ import java.util.List;
 public interface DbWriter {
     DbWriter initDb();
 
-    void writeItems(List<FoodItem> items);
+    DbWriter writeItems(List<FoodItem> items);
+
+    default void close() {
+    }
+
 }

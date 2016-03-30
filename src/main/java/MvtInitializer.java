@@ -16,6 +16,7 @@
 
 import integration.DbWriter;
 import integration.MongoWriter;
+import integration.MySqlWriter;
 import integration.XlsxReader;
 import model.FoodItem;
 
@@ -33,7 +34,7 @@ public class MvtInitializer {
     public static void main(String[] args) {
         Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015-truncated.xlsx");
         InputStream xlsxInputStream = null;
-        if(Files.exists(path) && Files.isReadable(path)) {
+        if (Files.exists(path) && Files.isReadable(path)) {
             try {
                 xlsxInputStream = Files.newInputStream(path);
             } catch (IOException e) {
@@ -41,14 +42,12 @@ public class MvtInitializer {
                 e.printStackTrace();
                 System.exit(1);
             }
-        }
-        else {
+        } else {
             System.err.println("Could not find resource " + path.toString());
             System.exit(1);
         }
-
         List<FoodItem> foodItems = new XlsxReader(xlsxInputStream).read();
-        DbWriter dbWriter = new MongoWriter().initDb();
-        dbWriter.writeItems(foodItems);
+        new MongoWriter().initDb().writeItems(foodItems).close();
+        new MySqlWriter().initDb().writeItems(foodItems).close();
     }
 }

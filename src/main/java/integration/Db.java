@@ -23,4 +23,5 @@ public class Db {
     public static final String DB_NAME = "mvt";
     public static final String MVT_MAIN_TABLE_NAME = "FOODITEM";
     public static final String IMPORT = "IMPORT";
+    public static final String JDBC_CONN_URL = "jdbc:mysql://localhost/";
 }

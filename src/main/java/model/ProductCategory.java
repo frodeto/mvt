@@ -52,4 +52,16 @@ public enum ProductCategory {
                 .findAny()
                 .orElseThrow(() -> new IllegalArgumentException("Product with id  " + mvtId + " not supported"));
     }
+
+    public Integer getMvtId() {
+        return mvtId;
+    }
+
+    public String getMvtName() {
+        return mvtName;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
 }
