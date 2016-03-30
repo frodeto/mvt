@@ -47,7 +47,7 @@ public class MvtInitializer {
             System.exit(1);
         }
         List<FoodItem> foodItems = new XlsxReader(xlsxInputStream).read();
-        new MongoWriter().initDb().writeItems(foodItems).close();
+        //new MongoWriter().initDb().writeItems(foodItems).close();
         new MySqlWriter().initDb().writeItems(foodItems).close();
     }
 }

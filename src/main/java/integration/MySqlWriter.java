@@ -74,29 +74,33 @@ public class MySqlWriter implements DbWriter {
 
     @Override
     public DbWriter writeItems(List<FoodItem> items) {
+        logger.info("Inserting {} food items", items.size());
         try {
             connection.setAutoCommit(false);
         } catch (SQLException e) {
             throw new MySqlWriterException("Failed to disable autocommit");
         }
 
-        String insertSql = "INSERT INTO FoodItem (FId, Name, PCId, SubGroup) VALUES(?,?,?,?)";
         try {
-            PreparedStatement preparedStatement = connection.prepareStatement(insertSql);
+            PreparedStatement foodItemStatement = connection.prepareStatement("INSERT INTO FoodItem (FId, Name, PCId, SubGroup) VALUES(?,?,?,?)");
+            PreparedStatement nutrientStatement = connection.prepareStatement("INSERT INTO FoodNutrients (Amount, FId, NutrientId) VALUES(?,?,?)");
             items.forEach(foodItem -> {
                 try {
-                    preparedStatement.setInt(1, foodItem.getId());
-                    preparedStatement.setString(2, foodItem.getName());
-                    preparedStatement.setInt(3, foodItem.getProductSubGroup().getProductGroup().getProductCategory().ordinal());
-                    preparedStatement.setString(4, foodItem.getProductSubGroup().getName());
-                    preparedStatement.addBatch();
-                    addNutrients(foodItem.getId(), foodItem.getNutrientMap());
-
+                    foodItemStatement.setInt(1, foodItem.getId());
+                    foodItemStatement.setString(2, foodItem.getName());
+                    foodItemStatement.setInt(3, foodItem.getProductSubGroup().getProductGroup().getProductCategory().ordinal());
+                    foodItemStatement.setString(4, foodItem.getProductSubGroup().getName());
+                    foodItemStatement.addBatch();
+                    addNutrients(nutrientStatement, foodItem.getId(), foodItem.getNutrientMap());
                 } catch (SQLException e) {
                     throw new MySqlWriterException("Failed to prepare sql statement", e);
                 }
             });
-            preparedStatement.executeBatch();
+            logger.info("Executing food items batch");
+            foodItemStatement.executeBatch();
+            connection.commit();
+            logger.info("Executing nutrient batch");
+            nutrientStatement.executeBatch();
             connection.commit();
             connection.setAutoCommit(true);
         } catch (SQLException e) {
@@ -105,25 +109,17 @@ public class MySqlWriter implements DbWriter {
         return this;
     }
 
-    private void addNutrients(final int foodItemId, Map<Nutrient, Double> nutrientMap) {
-        String insertSql = "INSERT INTO FoodNutrients (Amount, FId, NutrientId) VALUES(?,?,?)";
-        try {
-            PreparedStatement preparedStatement = connection.prepareStatement(insertSql);
-            nutrientMap.forEach((nutrient, amount) -> {
-                try {
-                    preparedStatement.setDouble(1, amount);
-                    preparedStatement.setInt(2, foodItemId);
-                    preparedStatement.setInt(3, nutrient.ordinal());
-                    preparedStatement.addBatch();
-                } catch (SQLException e) {
-                    throw new MySqlWriterException("Failed to prepare sql statement", e);
-                }
-            });
-            preparedStatement.executeBatch();
-            connection.commit();
-        } catch (SQLException e) {
-            throw new MySqlWriterException("Failed to insert nutrient map", e);
-        }
+    private void addNutrients(PreparedStatement nutrientStatement, final int foodItemId, Map<Nutrient, Double> nutrientMap) {
+        nutrientMap.forEach((nutrient, amount) -> {
+            try {
+                nutrientStatement.setDouble(1, amount);
+                nutrientStatement.setInt(2, foodItemId);
+                nutrientStatement.setInt(3, nutrient.ordinal());
+                nutrientStatement.addBatch();
+            } catch (SQLException e) {
+                throw new MySqlWriterException("Failed to prepare sql statement", e);
+            }
+        });
     }
 
     private void createCategories() throws SQLException {
@@ -154,6 +150,7 @@ public class MySqlWriter implements DbWriter {
             statement.setInt(1, mvtUnit.ordinal());
             statement.setString(2, mvtUnit.name());
             statement.setString(3, mvtUnit.getSymbol());
+            statement.executeUpdate();
         }
         statement.close();
         logger.info("Created Units.");
@@ -174,6 +171,7 @@ public class MySqlWriter implements DbWriter {
             statement.setString(2, nutrient.getName());
             statement.setString(3, nutrient.getMvtName());
             statement.setInt(4, nutrient.getUnit().ordinal());
+            statement.executeUpdate();
         }
         statement.close();
         logger.info("Created Nutrients.");
@@ -194,6 +192,7 @@ public class MySqlWriter implements DbWriter {
             statement.setString(2, productCategory.name());
             statement.setString(3, productCategory.getMvtName());
             statement.setInt(4, productCategory.getCategory().ordinal());
+            statement.executeUpdate();
         }
         statement.close();
         logger.info("Created ProductCategories.");
@@ -252,7 +251,6 @@ public class MySqlWriter implements DbWriter {
         MySqlWriterException(String message, Throwable cause) {
             super(message, cause);
         }
-
         MySqlWriterException(String message) {
             super(message);
         }

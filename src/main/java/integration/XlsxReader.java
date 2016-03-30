@@ -91,6 +91,12 @@ public class XlsxReader {
             if(Strings.isNullOrEmpty(getCellAsString(row, 0))) {
                 continue;
             }
+            if(currentProductGroup == null) {
+                currentProductGroup = new ProductGroup(currentProductCategory, "Default");
+            }
+            if(currentProductSubGroup == null) {
+                currentProductSubGroup = new ProductSubGroup(currentProductGroup, "Default");
+            }
             String matvareName = getCellAsString(row, 1);
             Map<Nutrient, Double> nutrientMap = new HashMap<>();
             nutrientColumnMap.forEach((k, v) -> nutrientMap.put(v, getCellAsDouble(row, k)));
