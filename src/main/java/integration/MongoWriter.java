@@ -49,6 +49,7 @@ public class MongoWriter implements DbWriter {
         // TODO this should retrieve the latest db
         mongoClient.getUsedDatabases().stream().filter(db -> db.collectionExists(Db.IMPORT)).forEach(db -> {
             DBCollection collection = db.getCollection(Db.IMPORT);
+            logger.info("Found mongo database {}", collection.getFullName());
             if (collection.count() > 0) {
                 logger.info("Import count %d setting dbName as %s", collection.count(), db.getName());
                 dbName = db.getName();
@@ -73,14 +74,14 @@ public class MongoWriter implements DbWriter {
 
     @Override
     public DbWriter writeItems(List<FoodItem> items) {
-        List<Document> jsonItems = items.stream().map(toDocument).collect(Collectors.<Document>toList());
+        List<Document> jsonItems = items.stream().map(toDocument).collect(Collectors.toList());
         MongoDatabase db = mongoClient.getDatabase(dbName);
         MongoCollection<Document> collection = db.getCollection(Db.MVT_MAIN_TABLE_NAME);
         collection.insertMany(jsonItems);
         return this;
     }
 
-    Function<FoodItem, Document> toDocument = foodItem -> {
+    private Function<FoodItem, Document> toDocument = foodItem -> {
         try {
             return Document.parse(jsonMapper.writeValueAsString(foodItem));
         } catch (JsonProcessingException e) {

@@ -20,6 +20,14 @@ import java.util.Arrays;
 
 /**
  * Corresponds to first level of grouping in MVT
+ * Structure:
+ * {@link Category}
+ *  |-  {@link ProductCategory}
+ *      |-  {@link ProductGroup}
+ *          |-  {@link ProductSubGroup}
+ *              |-  {@link FoodItem}
+ *
+ *  E.g.: [DAIRY] - [Melk og melkeprodukter] - [Ost] - [Ost, ekstra fet] - [Ridderost]
  */
 public enum ProductCategory {
 

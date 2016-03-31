@@ -19,7 +19,14 @@ package model;
 import java.util.Map;
 
 /**
+ * Structure:
+ * {@link Category}
+ *  |-  {@link ProductCategory}
+ *      |-  {@link ProductGroup}
+ *          |-  {@link ProductSubGroup}
+ *              |-  {@link FoodItem}
  *
+ *  E.g.: [DAIRY] - [Melk og melkeprodukter] - [Ost] - [Ost, ekstra fet] - [Ridderost]
  */
 public class FoodItem {
     private int id;

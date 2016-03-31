@@ -19,7 +19,7 @@ package model;
 import java.util.Arrays;
 
 /**
- * Units used in mvt data
+ * Units used in data from mvt
  */
 public enum MvtUnit {
     KCAL("kcal"),

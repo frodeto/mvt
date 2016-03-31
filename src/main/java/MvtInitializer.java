@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import integration.DbWriter;
 import integration.MongoWriter;
 import integration.MySqlWriter;
 import integration.XlsxReader;
@@ -28,11 +27,11 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- *
+ * Reading from sources, populating data storages
  */
 public class MvtInitializer {
     public static void main(String[] args) {
-        Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015-truncated.xlsx");
+        Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015.xlsx");
         InputStream xlsxInputStream = null;
         if (Files.exists(path) && Files.isReadable(path)) {
             try {
@@ -47,7 +46,7 @@ public class MvtInitializer {
             System.exit(1);
         }
         List<FoodItem> foodItems = new XlsxReader(xlsxInputStream).read();
-        //new MongoWriter().initDb().writeItems(foodItems).close();
+        new MongoWriter().initDb().writeItems(foodItems).close();
         new MySqlWriter().initDb().writeItems(foodItems).close();
     }
 }
