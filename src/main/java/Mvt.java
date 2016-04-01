@@ -15,32 +15,55 @@
  * limitations under the License.
  */
 
-import java.io.File;
-import java.io.IOException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import model.FoodItem;
+import model.Nutrient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import spark.Request;
+
+import java.util.List;
+
+import static spark.Spark.get;
 
 /**
  *
  */
 public class Mvt {
+    private final Logger logger = LoggerFactory.getLogger(Mvt.class);
+    private final MvtAnalyzer analyzer;
+    private ObjectMapper jsonMapper = new ObjectMapper();
+
 
     public static void main(String[] args) {
-        String result = "failed";
-        try {
-            result = new Mvt().test();
-        } catch (IOException e) {
-                e.printStackTrace();
-        }
-        final String outputstring = result;
+        Mvt mvt = new Mvt();
         // SPARK:
-        //get("/hello", (req, res) -> outputstring);
+        get("/search", (req, res) -> mvt.parseRequest(req));
     }
 
-    private String test() throws IOException {
-        MvtAnalyzer analyzer = new MvtJAnalyzer();
-        return "";
+    private Mvt() {
+        analyzer = new MvtJAnalyzer();
     }
 
-
-
+    private String parseRequest(Request req) throws JsonProcessingException {
+        logger.info("Parameter {} : {}", "Nutrient", req.queryParams("Nutrient"));
+        logger.info("Parameter {} : {}", "Amount", req.queryParams("Amount"));
+        Nutrient nutrient = Nutrient.fromMvtName(req.queryParams("Nutrient"));
+        double amount = Double.parseDouble(req.queryParams("Amount"));
+        List<FoodItem> aboveLevel = analyzer.getAboveLevel(nutrient, amount);
+        return jsonMapper.writeValueAsString(aboveLevel);
+        /*
+        final String[] nutrientValue = new String[2];
+        req.params().forEach((k, v) -> {
+            logger.info("Parameter {} : {}", k, v);
+            if ("Nutrient".equals(k)) {
+                nutrientValue[0] = v;
+            } else if ("Value".equals(k)) {
+                nutrientValue[1] = v;
+            }
+        });
+        */
+    }
 
 }
