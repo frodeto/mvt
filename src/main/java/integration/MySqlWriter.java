@@ -61,6 +61,7 @@ public class MySqlWriter implements DbWriter {
         }
 
         try {
+            createSources();
             createCategories();
             createUnits();
             createNutrients();
@@ -82,7 +83,7 @@ public class MySqlWriter implements DbWriter {
         }
 
         try {
-            PreparedStatement foodItemStatement = connection.prepareStatement("INSERT INTO FoodItem (FId, Name, PCId, SubGroup) VALUES(?,?,?,?)");
+            PreparedStatement foodItemStatement = connection.prepareStatement("INSERT INTO FoodItem (FId, Name, PCId, SubGroup, SourceId) VALUES(?,?,?,?,?)");
             PreparedStatement nutrientStatement = connection.prepareStatement("INSERT INTO FoodNutrients (Amount, FId, NutrientId) VALUES(?,?,?)");
             items.forEach(foodItem -> {
                 try {
@@ -90,6 +91,7 @@ public class MySqlWriter implements DbWriter {
                     foodItemStatement.setString(2, foodItem.getName());
                     foodItemStatement.setInt(3, foodItem.getProductSubGroup().getProductGroup().getProductCategory().ordinal());
                     foodItemStatement.setString(4, foodItem.getProductSubGroup().getName());
+                    foodItemStatement.setInt(5, foodItem.getDataSource().ordinal());
                     foodItemStatement.addBatch();
                     addNutrients(nutrientStatement, foodItem.getId(), foodItem.getNutrientMap());
                 } catch (SQLException e) {
@@ -120,6 +122,22 @@ public class MySqlWriter implements DbWriter {
                 throw new MySqlWriterException("Failed to prepare sql statement", e);
             }
         });
+    }
+
+    private void createSources() throws SQLException {
+        String createTableStatement = "CREATE TABLE Source(" +
+                "SourceId INT NOT NULL" + ',' +
+                "Name VARCHAR(80) NOT NULL" + ',' +
+                "PRIMARY KEY ( SourceId ));";
+        createTable(createTableStatement);
+        PreparedStatement statement = connection.prepareStatement("INSERT INTO Source VALUES (?,?)");
+        for (DataSource dataSource : DataSource.values()) {
+            statement.setInt(1, dataSource.ordinal());
+            statement.setString(2, dataSource.name());
+            statement.executeUpdate();
+        }
+        statement.close();
+        logger.info("Created DataSources.");
     }
 
     private void createCategories() throws SQLException {
@@ -204,7 +222,9 @@ public class MySqlWriter implements DbWriter {
                 "Name VARCHAR(80) NOT NULL" + ',' +
                 "SubGroup VARCHAR(80) NOT NULL" + ',' +
                 "PCId INT NOT NULL" + ',' +
-                "PRIMARY KEY ( FId )" + ',' +
+                "SourceId INT NOT NULL" + ',' +
+                "PRIMARY KEY (FId)" + ',' +
+                "FOREIGN KEY (SourceId) REFERENCES Source (SourceId)" + ',' +
                 "FOREIGN KEY (PCId) REFERENCES ProductCategory (PCId));";
         createTable(foodItem);
 

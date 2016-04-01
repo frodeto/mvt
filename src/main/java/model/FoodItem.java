@@ -33,12 +33,14 @@ public class FoodItem {
     private String name;
     private ProductSubGroup productSubGroup;
     private Map<Nutrient, Double> nutrientMap;
+    private DataSource dataSource;
 
-    public FoodItem(int id, String name, ProductSubGroup productSubGroup, Map<Nutrient, Double> nutrientMap) {
+    public FoodItem(int id, String name, ProductSubGroup productSubGroup, Map<Nutrient, Double> nutrientMap, DataSource dataSource) {
         this.id = id;
         this.name = name;
         this.productSubGroup = productSubGroup;
         this.nutrientMap = nutrientMap;
+        this.dataSource = dataSource;
     }
 
     public int getId() {
@@ -71,5 +73,13 @@ public class FoodItem {
 
     public void setNutrientMap(Map<Nutrient, Double> nutrientMap) {
         this.nutrientMap = nutrientMap;
+    }
+
+    public DataSource getDataSource() {
+        return dataSource;
+    }
+
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
     }
 }

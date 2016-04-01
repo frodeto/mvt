@@ -33,15 +33,15 @@ import java.util.regex.Pattern;
 /**
  * Reading mvt data from xlsx (which is currently the way it is distributed).
  */
-public class XlsxReader {
+public class MvtXlsxReader {
     private static final Pattern PRODUCT_PATTERN = Pattern.compile("^\\d+(?!\\.)");
     private static final Pattern PRODUCT_GROUP_PATTERN = Pattern.compile("^\\d+\\.\\d{1,2}(?!\\.)");
     private static final Pattern PRODUCT_SUB_GROUP_PATTERN = Pattern.compile("^\\d+\\.\\d+\\.\\d+(?!\\.)");
-    private final Logger logger = LoggerFactory.getLogger(XlsxReader.class);
+    private final Logger logger = LoggerFactory.getLogger(MvtXlsxReader.class);
 
     private XSSFWorkbook workbook;
 
-    public XlsxReader(InputStream xlsxInput) {
+    public MvtXlsxReader(InputStream xlsxInput) {
         try {
             workbook = new XSSFWorkbook(xlsxInput);
         } catch (IOException e) {
@@ -100,7 +100,7 @@ public class XlsxReader {
             String matvareName = getCellAsString(row, 1);
             Map<Nutrient, Double> nutrientMap = new HashMap<>();
             nutrientColumnMap.forEach((k, v) -> nutrientMap.put(v, getCellAsDouble(row, k)));
-            foodItems.add(new FoodItem(++incrementalId, matvareName, currentProductSubGroup, nutrientMap));
+            foodItems.add(new FoodItem(++incrementalId, matvareName, currentProductSubGroup, nutrientMap, DataSource.MVT));
         }
         logger.info("Antall matvarer funnet: " + foodItems.size());
         return foodItems;

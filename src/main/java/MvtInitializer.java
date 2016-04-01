@@ -15,8 +15,8 @@
  */
 
 import integration.MongoWriter;
+import integration.MvtXlsxReader;
 import integration.MySqlWriter;
-import integration.XlsxReader;
 import model.FoodItem;
 
 import java.io.IOException;
@@ -45,8 +45,8 @@ public class MvtInitializer {
             System.err.println("Could not find resource " + path.toString());
             System.exit(1);
         }
-        List<FoodItem> foodItems = new XlsxReader(xlsxInputStream).read();
+        List<FoodItem> foodItems = new MvtXlsxReader(xlsxInputStream).read();
         new MongoWriter().initDb().writeItems(foodItems).close();
-        //new MySqlWriter().initDb().writeItems(foodItems).close();
+        new MySqlWriter().initDb().writeItems(foodItems).close();
     }
 }
