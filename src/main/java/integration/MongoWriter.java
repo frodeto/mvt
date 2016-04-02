@@ -16,8 +16,8 @@
 
 package integration;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -40,8 +40,7 @@ public class MongoWriter implements DbWriter {
     private static final String TIMESTAMP_KEY = "timestamp";
     private MongoClient mongoClient;
     private String dbName = null;
-    private ObjectMapper jsonMapper = new ObjectMapper();
-
+    private Gson gson = new GsonBuilder().create();
     private final Logger logger = LoggerFactory.getLogger(MongoWriter.class);
 
     public MongoWriter() {
@@ -84,13 +83,5 @@ public class MongoWriter implements DbWriter {
         collection.insertOne(new Document(TIMESTAMP_KEY, timestamp.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
     }
 
-    private Function<FoodItem, Document> toDocument = foodItem -> {
-        try {
-            return Document.parse(jsonMapper.writeValueAsString(foodItem));
-        } catch (JsonProcessingException e) {
-            logger.error("Error mapping json", e);
-            throw new RuntimeException(e);
-        }
-    };
-
+    private Function<FoodItem, Document> toDocument = foodItem -> Document.parse(gson.toJson(foodItem));
 }

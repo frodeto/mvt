@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class MvtInitializer {
     public static void main(String[] args) {
-        Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015-truncated.xlsx");
+        Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015.xlsx");
         InputStream xlsxInputStream = null;
         if (Files.exists(path) && Files.isReadable(path)) {
             try {
@@ -47,6 +47,6 @@ public class MvtInitializer {
         }
         List<FoodItem> foodItems = new MvtXlsxReader(xlsxInputStream).read();
         new MongoWriter().initDb().writeItems(foodItems).close();
-        new MySqlWriter().initDb().writeItems(foodItems).close();
+        //new MySqlWriter().initDb().writeItems(foodItems).close();
     }
 }

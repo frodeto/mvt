@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import model.FoodItem;
 import model.Nutrient;
 import org.slf4j.Logger;
@@ -33,8 +33,7 @@ import static spark.Spark.get;
 public class Mvt {
     private final Logger logger = LoggerFactory.getLogger(Mvt.class);
     private final MvtAnalyzer analyzer;
-    private ObjectMapper jsonMapper = new ObjectMapper();
-
+    private Gson gson = new GsonBuilder().create();
 
     public static void main(String[] args) {
         Mvt mvt = new Mvt();
@@ -46,24 +45,14 @@ public class Mvt {
         analyzer = new MvtJAnalyzer();
     }
 
-    private String parseRequest(Request req) throws JsonProcessingException {
-        logger.info("Parameter {} : {}", "Nutrient", req.queryParams("Nutrient"));
-        logger.info("Parameter {} : {}", "Amount", req.queryParams("Amount"));
+    private String parseRequest(Request req) {
+        logger.info("Received {}", req.url());
         Nutrient nutrient = Nutrient.fromMvtName(req.queryParams("Nutrient"));
         double amount = Double.parseDouble(req.queryParams("Amount"));
         List<FoodItem> aboveLevel = analyzer.getAboveLevel(nutrient, amount);
-        return jsonMapper.writeValueAsString(aboveLevel);
-        /*
-        final String[] nutrientValue = new String[2];
-        req.params().forEach((k, v) -> {
-            logger.info("Parameter {} : {}", k, v);
-            if ("Nutrient".equals(k)) {
-                nutrientValue[0] = v;
-            } else if ("Value".equals(k)) {
-                nutrientValue[1] = v;
-            }
-        });
-        */
+        String response = gson.toJson(aboveLevel);
+        logger.info("Respnse: {}", response);
+        return response;
     }
 
 }

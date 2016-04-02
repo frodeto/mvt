@@ -17,6 +17,7 @@
 package model;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Structure:
@@ -35,6 +36,9 @@ public class FoodItem {
     private Map<Nutrient, Double> nutrientMap;
     private DataSource dataSource;
 
+    public FoodItem() {
+    }
+
     public FoodItem(int id, String name, ProductSubGroup productSubGroup, Map<Nutrient, Double> nutrientMap, DataSource dataSource) {
         this.id = id;
         this.name = name;
@@ -47,39 +51,34 @@ public class FoodItem {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public ProductSubGroup getProductSubGroup() {
         return productSubGroup;
     }
 
-    public void setProductSubGroup(ProductSubGroup productSubGroup) {
-        this.productSubGroup = productSubGroup;
-    }
-
     public Map<Nutrient, Double> getNutrientMap() {
         return nutrientMap;
-    }
-
-    public void setNutrientMap(Map<Nutrient, Double> nutrientMap) {
-        this.nutrientMap = nutrientMap;
     }
 
     public DataSource getDataSource() {
         return dataSource;
     }
 
-    public void setDataSource(DataSource dataSource) {
-        this.dataSource = dataSource;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FoodItem foodItem = (FoodItem) o;
+        return id == foodItem.id &&
+                Objects.equals(name, foodItem.name) &&
+                dataSource == foodItem.dataSource;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, dataSource);
     }
 }

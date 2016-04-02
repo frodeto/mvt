@@ -18,16 +18,14 @@ import integration.MongoReader;
 import model.FoodItem;
 import model.Nutrient;
 
-import java.text.ParseException;
 import java.util.List;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class MvtJAnalyzer implements MvtAnalyzer {
+class MvtJAnalyzer implements MvtAnalyzer {
 
     private final List<FoodItem> foodItems;
 
-    public MvtJAnalyzer() {
+    MvtJAnalyzer() {
         foodItems = new MongoReader().retrieveAll();
 
     }

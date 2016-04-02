@@ -16,7 +16,8 @@
 
 package integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -25,7 +26,6 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class MongoReader {
     private static final String TIMESTAMP_KEY = "timestamp";
     private MongoClient mongoClient;
     private MongoDatabase mvtDb;
-    private ObjectMapper jsonMapper = new ObjectMapper();
+    private Gson gson = new GsonBuilder().create();
     private final Logger logger = LoggerFactory.getLogger(MongoReader.class);
 
     public MongoReader() {
@@ -50,18 +50,11 @@ public class MongoReader {
 
     public List<FoodItem> retrieveAll() {
         MongoCollection<Document> collection = mvtDb.getCollection(Db.MVT_MAIN_TABLE_NAME);
+        logger.info("Reading {} objects from database", collection.count());
         return collection.find().into(new ArrayList<>()).stream().map(toFoodItem).collect(Collectors.toList());
     }
 
-    private Function<Document, FoodItem> toFoodItem = document -> {
-        try {
-            return jsonMapper.readValue(document.toJson(), FoodItem.class);
-
-        } catch (IOException e) {
-            logger.error("Error mapping json", e);
-            throw new RuntimeException(e);
-        }
-    };
+    private Function<Document, FoodItem> toFoodItem = document -> gson.fromJson(document.toJson(), FoodItem.class);
 
     private void findCurrentDb() {
         LocalDateTime lastTimestamp = LocalDateTime.MIN;
@@ -74,6 +67,7 @@ public class MongoReader {
                 lastTimestamp = fromTimestamp;
             }
         }
+        logger.info("Reading from database {}", mvtDb.getName());
     }
 
     private LocalDateTime getTimeStamp(String databaseName) {

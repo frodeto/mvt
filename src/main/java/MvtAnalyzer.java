@@ -22,7 +22,7 @@ import java.util.List;
 /**
  *
  */
-public interface MvtAnalyzer {
+interface MvtAnalyzer {
 
     List<FoodItem> getAboveLevel(Nutrient nutrient, Double level);
 }

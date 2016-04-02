@@ -41,7 +41,7 @@ public class ProductGroup {
         return productCategory;
     }
 
-    public String getName() {
+    private String getName() {
         return name;
     }
 

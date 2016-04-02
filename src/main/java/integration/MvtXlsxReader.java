@@ -150,7 +150,7 @@ public class MvtXlsxReader {
         return columnMap;
     }
 
-    public static class XlsxReaderException extends RuntimeException {
+    private static class XlsxReaderException extends RuntimeException {
         XlsxReaderException(String message, Throwable cause) {
             super(message, cause);
         }
