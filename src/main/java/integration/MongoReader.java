@@ -33,6 +33,9 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.mongodb.client.model.Filters.eq;
+
+
 /**
  *
  */
@@ -40,6 +43,7 @@ public class MongoReader {
     private static final String TIMESTAMP_KEY = "timestamp";
     private MongoClient mongoClient;
     private MongoDatabase mvtDb;
+    private MongoCollection<Document> mvtCollection;
     private Gson gson = new GsonBuilder().create();
     private final Logger logger = LoggerFactory.getLogger(MongoReader.class);
 
@@ -49,9 +53,12 @@ public class MongoReader {
     }
 
     public List<FoodItem> retrieveAll() {
-        MongoCollection<Document> collection = mvtDb.getCollection(Db.MVT_MAIN_TABLE_NAME);
-        logger.info("Reading {} objects from database", collection.count());
-        return collection.find().into(new ArrayList<>()).stream().map(toFoodItem).collect(Collectors.toList());
+        logger.info("Reading {} objects from database", mvtCollection.count());
+        return mvtCollection.find().into(new ArrayList<>()).stream().map(toFoodItem).collect(Collectors.toList());
+    }
+
+    public FoodItem get(Integer id) {
+        return mvtCollection.find(eq("id", id)).into(new ArrayList<>()).stream().map(toFoodItem).findAny().orElse(null);
     }
 
     private Function<Document, FoodItem> toFoodItem = document -> gson.fromJson(document.toJson(), FoodItem.class);
@@ -67,7 +74,9 @@ public class MongoReader {
                 lastTimestamp = fromTimestamp;
             }
         }
-        logger.info("Reading from database {}", mvtDb.getName());
+        logger.info("Reading from database {}...", mvtDb.getName());
+        mvtCollection = mvtDb.getCollection(Db.MVT_MAIN_TABLE_NAME);
+        logger.info("collection loaded.");
     }
 
     private LocalDateTime getTimeStamp(String databaseName) {

@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import integration.MongoReader;
+package control;
+
+import integration.FoodItemReference;
 import model.FoodItem;
 import model.Nutrient;
 
@@ -25,16 +27,17 @@ class MvtJAnalyzer implements MvtAnalyzer {
 
     private final List<FoodItem> foodItems;
 
-    MvtJAnalyzer() {
-        foodItems = new MongoReader().retrieveAll();
+    MvtJAnalyzer(List<FoodItem> foodItems) {
+        this.foodItems = foodItems;
 
     }
 
     @Override
-    public List<FoodItem> getAboveLevel(Nutrient nutrient, Double level) {
+    public List<FoodItemReference> getAboveLevel(Nutrient nutrient, Double level) {
         return foodItems.stream().filter(foodItem -> {
             Double thisLevel = foodItem.getNutrientMap().get(nutrient);
             return thisLevel >= level;
-        }).collect(Collectors.toList());
+        }).map(foodItem -> new FoodItemReference(foodItem.getId(), foodItem.getName(), foodItem.getDataSource()))
+                .collect(Collectors.toList());
     }
 }

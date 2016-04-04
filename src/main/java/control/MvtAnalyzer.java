@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import model.FoodItem;
+package control;
+
+import integration.FoodItemReference;
 import model.Nutrient;
 
 import java.util.List;
@@ -24,5 +26,5 @@ import java.util.List;
  */
 interface MvtAnalyzer {
 
-    List<FoodItem> getAboveLevel(Nutrient nutrient, Double level);
+    List<FoodItemReference> getAboveLevel(Nutrient nutrient, Double level);
 }
