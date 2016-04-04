@@ -48,7 +48,7 @@ public class Mvt {
 
         // Define SPARK filters:
         before((req, res) -> logger.info("Received {}", req.url()));
-        after((req, res) -> logger.info("Response: {}", res.body()));
+        after((req, res) -> logger.info("Response: {}", res.raw()));
 
     }
 
