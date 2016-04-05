@@ -85,7 +85,7 @@ public enum Nutrient {
 
     public static Nutrient fromMvtName(final String mvtName) {
         return Arrays.stream(values())
-                .filter(n -> n.mvtName.equals(mvtName))
+                .filter(n -> n.mvtName.equalsIgnoreCase(mvtName))
                 .findAny()
                 .orElse(null);
                 //.orElseThrow(() -> new IllegalArgumentException("Nutrient " + mvtName + " not supported"));
