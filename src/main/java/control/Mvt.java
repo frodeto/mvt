@@ -20,6 +20,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import integration.FoodItemReference;
 import integration.MongoReader;
+import integration.NutrientReference;
 import model.FoodItem;
 import model.Nutrient;
 import org.slf4j.Logger;
@@ -27,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static spark.Spark.*;
 
@@ -44,6 +47,7 @@ public class Mvt {
 
         // Define SPARK interface:
         get("/search", (req, res) -> mvt.executeSearch(req), gson::toJson);
+        get("/nutrients", (req, res) -> mvt.retrieveNutrients(), gson::toJson);
         get("/:name/:id", (req, res) -> mvt.retrieve(req), gson::toJson);
 
         // Define SPARK filters:
@@ -52,6 +56,10 @@ public class Mvt {
 
     }
 
+    private List<NutrientReference> retrieveNutrients() {
+        return Stream.of(Nutrient.values()).map(nutrient -> new NutrientReference(nutrient.ordinal(), nutrient.getMvtName()))
+                .collect(Collectors.toList());
+    }
 
     private Mvt() {
         mongoReader = new MongoReader();
@@ -68,9 +76,16 @@ public class Mvt {
         switch (req.params(":name").toLowerCase()) {
             case "fooditem":
                 return retrieveFoodItem(req.params(":id"));
+            case "nutrient":
+                return retrieveNutrient(req.params(":id"));
             default:
                 return null;
         }
+    }
+
+    private Nutrient retrieveNutrient(String params) {
+        logger.info(params);
+        return null;
     }
 
     private FoodItem retrieveFoodItem(String id) {
