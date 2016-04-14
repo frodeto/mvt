@@ -43,12 +43,18 @@ public class Mvt {
     private final MvtAnalyzer analyzer;
 
     public static void main(String[] args) {
+        staticFileLocation("/public");
         Mvt mvt = new Mvt();
 
         // Define SPARK interface:
         get("/search", (req, res) -> mvt.executeSearch(req), gson::toJson);
         get("/nutrients", (req, res) -> mvt.retrieveNutrients(), gson::toJson);
         get("/:name/:id", (req, res) -> mvt.retrieve(req), gson::toJson);
+        get("/employees", (req, res) -> "{\"employees\":[\n" +
+                "    {\"firstName\":\"John\", \"lastName\":\"Doe\"},\n" +
+                "    {\"firstName\":\"Anna\", \"lastName\":\"Smith\"},\n" +
+                "    {\"firstName\":\"Peter\", \"lastName\":\"Jones\"}\n" +
+                "]}");
 
         // Define SPARK filters:
         before((req, res) -> logger.info("Received {}", req.url()));
