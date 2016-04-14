@@ -1,0 +1,22 @@
+body {
+    background-color: lightgray;
+}
+
+#employee {
+    background-color: white;
+    color: black;
+    overflow:hidden;
+    border-radius: 10px;
+    border-spacing:0px;
+    margin: auto;
+    width: 60%;
+    th {
+        background-color: green;
+        color: white;
+        text-align: left;
+        padding: 8px;
+    };
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+}
