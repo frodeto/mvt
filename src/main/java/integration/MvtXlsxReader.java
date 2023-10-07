@@ -127,13 +127,11 @@ public class MvtXlsxReader {
 
     private String getCellAsString(Row row, int rowNum) {
         Cell cell = row.getCell(rowNum, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-        cell.setCellType(Cell.CELL_TYPE_STRING);
         return cell.toString();
     }
 
     private Double getCellAsDouble(Row row, int rowNum) {
         Cell cell = row.getCell(rowNum, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-        cell.setCellType(Cell.CELL_TYPE_NUMERIC);
         return cell.getNumericCellValue();
     }
 
