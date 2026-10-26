@@ -16,7 +16,6 @@
 
 package integration;
 
-import com.google.common.base.Strings;
 import model.*;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -88,7 +87,7 @@ public class MvtXlsxReader {
                 currentProductSubGroup = new ProductSubGroup(currentProductGroup, getCellAsString(row, 1));
                 continue;
             }
-            if(Strings.isNullOrEmpty(getCellAsString(row, 0))) {
+            if(getCellAsString(row, 0).isEmpty()) {
                 continue;
             }
             if(currentProductGroup == null) {

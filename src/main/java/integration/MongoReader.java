@@ -18,7 +18,8 @@ package integration;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import model.FoodItem;
@@ -48,12 +49,12 @@ public class MongoReader {
     private final Logger logger = LoggerFactory.getLogger(MongoReader.class);
 
     public MongoReader() {
-        mongoClient = new MongoClient();
+        mongoClient = MongoClients.create();
         findCurrentDb();
     }
 
     public List<FoodItem> retrieveAll() {
-        logger.info("Reading {} objects from database", mvtCollection.count());
+        logger.info("Reading {} objects from database", mvtCollection.countDocuments());
         return mvtCollection.find().into(new ArrayList<>()).stream().map(toFoodItem).collect(Collectors.toList());
     }
 

@@ -18,7 +18,8 @@ package integration;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import model.FoodItem;
@@ -44,7 +45,7 @@ public class MongoWriter implements DbWriter {
     private final Logger logger = LoggerFactory.getLogger(MongoWriter.class);
 
     public MongoWriter() {
-        mongoClient = new MongoClient();
+        mongoClient = MongoClients.create();
     }
 
     @Override
@@ -72,7 +73,7 @@ public class MongoWriter implements DbWriter {
             if(databaseName.contains(Db.DB_NAME)) {
                 String timestamp = (String) mongoClient.getDatabase(databaseName)
                         .getCollection(Db.IMPORT).find().first().get(TIMESTAMP_KEY);
-                mongoClient.dropDatabase(databaseName);
+                mongoClient.getDatabase(databaseName).drop();
                 logger.info("Dropped mongo db '{}' with timestamp '{}'", databaseName, timestamp);
             }
         }
