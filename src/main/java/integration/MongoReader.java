@@ -52,9 +52,14 @@ public class MongoReader implements FoodItemRepository, AutoCloseable {
      */
     public MongoReader(String connectionString) {
         mongoClient = MongoClients.create(connectionString);
-        MongoDatabase mvtDb = findCurrentDb();
-        logger.info("Reading from database {}", mvtDb.getName());
-        mvtCollection = mvtDb.getCollection(Db.MVT_MAIN_TABLE_NAME);
+        try {
+            MongoDatabase mvtDb = findCurrentDb();
+            logger.info("Reading from database {}", mvtDb.getName());
+            mvtCollection = mvtDb.getCollection(Db.MVT_MAIN_TABLE_NAME);
+        } catch (RuntimeException e) {
+            mongoClient.close();
+            throw e;
+        }
     }
 
     @Override
