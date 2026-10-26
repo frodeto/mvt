@@ -45,8 +45,11 @@ public class MongoWriter implements DbWriter {
     private LocalDateTime timestamp;
     private String dbName;
 
-    public MongoWriter() {
-        mongoClient = MongoClients.create();
+    /**
+     * @param connectionString e.g. {@code mongodb://localhost:27017}
+     */
+    public MongoWriter(String connectionString) {
+        mongoClient = MongoClients.create(connectionString);
     }
 
     @Override

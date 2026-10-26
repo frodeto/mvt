@@ -74,9 +74,9 @@ public enum Nutrient {
     PHOSPHORUS("Fosfor", "phosphorus", MvtUnit.MILLIGRAMS),
     IODINE("Jod", "iodine", MvtUnit.MICROGRAMS);
 
-    private String mvtName;
-    private String name;
-    private MvtUnit unit;
+    private final String mvtName;
+    private final String name;
+    private final MvtUnit unit;
 
     Nutrient(String mvtName, String name, MvtUnit unit) {
         this.mvtName = mvtName;

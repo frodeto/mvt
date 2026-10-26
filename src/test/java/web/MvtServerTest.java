@@ -130,7 +130,7 @@ class MvtServerTest {
 
         @Override
         public Optional<FoodItem> findById(int id) {
-            return FOOD_ITEMS.stream().filter(item -> item.getId() == id).findFirst();
+            return FOOD_ITEMS.stream().filter(item -> item.id() == id).findFirst();
         }
     }
 }

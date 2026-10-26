@@ -22,6 +22,7 @@ import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServlet;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
+import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
@@ -44,7 +45,10 @@ public final class MvtServer implements AutoCloseable {
         tomcat.setPort(port);
         tomcat.getConnector().setProperty("useVirtualThreads", "true");
 
-        Context context = tomcat.addContext("", null);
+        StandardContext context = (StandardContext) tomcat.addContext("", null);
+        // Leak detection is for redeployed webapps; it does not apply to this single embedded context
+        context.setClearReferencesThreadLocals(false);
+        context.setClearReferencesRmiTargets(false);
         addServlet(context, "search", new SearchServlet(analyzer), "/search");
         addServlet(context, "nutrients", new NutrientsServlet(), "/nutrients");
         addServlet(context, "nutrient", new NutrientServlet(), "/nutrient/*");
@@ -79,7 +83,7 @@ public final class MvtServer implements AutoCloseable {
 
     private static void addServlet(Context context, String name, HttpServlet servlet, String mapping) {
         Tomcat.addServlet(context, name, servlet);
-        context.addServletMappingDecoded(mapping, name);
+        context.addServletMapping(mapping, name);
     }
 
     private static void addFilter(Context context, String name, Filter filter, String urlPattern) {

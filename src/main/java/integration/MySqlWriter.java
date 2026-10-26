@@ -28,14 +28,14 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
- * Writes food items to a relational schema in the MySQL database {@value Db#DB_NAME}. Existing tables are replaced.
+ * Writes food items to a relational schema in a MySQL database. Existing tables are replaced.
  */
 public class MySqlWriter implements DbWriter {
     /**
@@ -47,12 +47,19 @@ public class MySqlWriter implements DbWriter {
     private final Connection connection;
     private final Logger logger = LoggerFactory.getLogger(MySqlWriter.class);
 
-    public MySqlWriter() {
+    /**
+     * @param jdbcUrl URL including the database, e.g. {@code jdbc:mysql://localhost/mvt}
+     */
+    public MySqlWriter(String jdbcUrl, String user, String password) {
+        Properties properties = new Properties();
+        properties.setProperty("user", user);
+        properties.setProperty("password", password);
+        properties.setProperty("rewriteBatchedStatements", "true");
         try {
-            connection = DriverManager.getConnection(Db.JDBC_CONN_URL + Db.DB_NAME + "?user=root&password=admin");
-            logger.info("Connected to {} in {} as root", Db.DB_NAME, Db.JDBC_CONN_URL);
+            connection = DriverManager.getConnection(jdbcUrl, properties);
+            logger.info("Connected to {} as {}", jdbcUrl, user);
         } catch (SQLException e) {
-            throw new MySqlWriterException("Error connecting to database", e);
+            throw new MySqlWriterException("Error connecting to " + jdbcUrl, e);
         }
     }
 
@@ -69,8 +76,8 @@ public class MySqlWriter implements DbWriter {
 
     @Override
     public DbWriter initDb() {
-        if (!mvtDbExists()) {
-            throw new MySqlWriterException("Could not find mvt database");
+        if (!databaseSelected()) {
+            throw new MySqlWriterException("No database selected; include it in the JDBC URL");
         }
 
         try {
@@ -97,14 +104,14 @@ public class MySqlWriter implements DbWriter {
                  PreparedStatement nutrientStatement = connection.prepareStatement(
                          "INSERT INTO FoodNutrients (Amount, FId, NutrientId) VALUES(?,?,?)")) {
                 for (FoodItem foodItem : items) {
-                    foodItemStatement.setInt(1, foodItem.getId());
-                    foodItemStatement.setString(2, foodItem.getMvtId());
-                    foodItemStatement.setString(3, foodItem.getName());
-                    foodItemStatement.setInt(4, foodItem.getProductSubGroup().getProductGroup().getProductCategory().ordinal());
-                    foodItemStatement.setString(5, foodItem.getProductSubGroup().getName());
-                    foodItemStatement.setInt(6, foodItem.getDataSource().ordinal());
+                    foodItemStatement.setInt(1, foodItem.id());
+                    foodItemStatement.setString(2, foodItem.mvtId());
+                    foodItemStatement.setString(3, foodItem.name());
+                    foodItemStatement.setInt(4, foodItem.productSubGroup().productGroup().productCategory().ordinal());
+                    foodItemStatement.setString(5, foodItem.productSubGroup().name());
+                    foodItemStatement.setInt(6, foodItem.dataSource().ordinal());
                     foodItemStatement.addBatch();
-                    addNutrients(nutrientStatement, foodItem.getId(), foodItem.getNutrientMap());
+                    addNutrients(nutrientStatement, foodItem.id(), foodItem.nutrientMap());
                 }
                 logger.info("Executing food items batch");
                 foodItemStatement.executeBatch();
@@ -257,14 +264,9 @@ public class MySqlWriter implements DbWriter {
         logger.info(createTableStatement.split("\\(")[0]);
     }
 
-    private boolean mvtDbExists() {
-        try (ResultSet resultSet = connection.getMetaData().getCatalogs()) {
-            while (resultSet.next()) {
-                if (Db.DB_NAME.equals(resultSet.getString(1))) {
-                    return true;
-                }
-            }
-            return false;
+    private boolean databaseSelected() {
+        try {
+            return connection.getCatalog() != null;
         } catch (SQLException e) {
             throw new MySqlWriterException("Error reading metadata from mysql", e);
         }

@@ -32,7 +32,6 @@ class Db {
     static final String MVT_MAIN_TABLE_NAME = "FOODITEM";
     static final String IMPORT = "IMPORT";
     static final String TIMESTAMP_KEY = "timestamp";
-    static final String JDBC_CONN_URL = "jdbc:mysql://localhost/";
 
     /**
      * Mongo databases are named mvt + import date (yyyyMMdd), or date and time (yyyyMMddHHmmss).

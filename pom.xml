@@ -12,6 +12,8 @@
         <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Default for ./mvnw exec:java; override with -Dexec.mainClass=control.MvtInitializer -->
+        <exec.mainClass>control.Mvt</exec.mainClass>
 
         <tomcat.version>11.0.27</tomcat.version>
         <poi.version>6.0.0</poi.version>
@@ -111,6 +113,13 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.16.0</version>
+                    <configuration>
+                        <compilerArgs>
+                            <!-- Servlets and exceptions are never serialized, so serialVersionUID is not needed -->
+                            <arg>-Xlint:all,-serial</arg>
+                        </compilerArgs>
+                        <failOnWarning>true</failOnWarning>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -146,9 +155,6 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
                     <version>3.6.4</version>
-                    <configuration>
-                        <mainClass>control.Mvt</mainClass>
-                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

@@ -18,39 +18,8 @@ package integration;
 
 import model.DataSource;
 
-import java.util.Objects;
-
 /**
- *
+ * Short reference to a {@link model.FoodItem}, used in search results.
  */
-public class FoodItemReference {
-    private int id;
-    private String name;
-    private DataSource dataSource;
-
-    public FoodItemReference(int id, String name, DataSource dataSource) {
-        this.id = id;
-        this.name = name;
-        this.dataSource = dataSource;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FoodItemReference that = (FoodItemReference) o;
-        return id == that.id &&
-                Objects.equals(name, that.name) &&
-                dataSource == that.dataSource;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, dataSource);
-    }
-
-    @Override
-    public String toString() {
-        return "" + id + " " + name + " " + dataSource;
-    }
+public record FoodItemReference(int id, String name, DataSource dataSource) {
 }

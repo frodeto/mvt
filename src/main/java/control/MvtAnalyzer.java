@@ -22,9 +22,12 @@ import model.Nutrient;
 import java.util.List;
 
 /**
- *
+ * Searches food items by nutrient content.
  */
 public interface MvtAnalyzer {
 
-    List<FoodItemReference> getAboveLevel(Nutrient nutrient, Double level);
+    /**
+     * Food items with at least {@code level} of the nutrient. Items without a known value for it are left out.
+     */
+    List<FoodItemReference> getAboveLevel(Nutrient nutrient, double level);
 }
