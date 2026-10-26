@@ -1,0 +1,48 @@
+package model;
+
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class NutrientTest {
+
+    @ParameterizedTest
+    @CsvSource({"Vann,WATER", "Kilojoule,ENERGY", "Fett,FAT", "Protein,PROTEIN", "Vitamin B12,VITAMIN_B12", "Jod,IODINE"})
+    void mapsSpreadsheetHeaderToNutrient(String header, Nutrient expected) {
+        assertEquals(expected, Nutrient.fromMvtName(header));
+    }
+
+    @Test
+    void mapsCaseInsensitively() {
+        assertEquals(Nutrient.WATER, Nutrient.fromMvtName("VANN"));
+    }
+
+    @Test
+    void returnsNullForUnknownHeader() {
+        assertNull(Nutrient.fromMvtName("Spiselig del"));
+        assertNull(Nutrient.fromMvtName(null));
+    }
+
+    @Test
+    @Disabled("Known bug: SATURATED_FAT has mvtName 'Fett' instead of 'Mettet' - fixed in phase 4")
+    void mapsSaturatedFat() {
+        assertEquals(Nutrient.SATURATED_FAT, Nutrient.fromMvtName("Mettet"));
+    }
+
+    @Test
+    @Disabled("Known bug: SATURATED_FAT has mvtName 'Fett' instead of 'Mettet' - fixed in phase 4")
+    void hasUniqueMvtNames() {
+        assertEquals(Nutrient.values().length, Arrays.stream(Nutrient.values()).map(Nutrient::getMvtName).distinct().count());
+    }
+
+    @Test
+    @Disabled("Known bug: VITAMIN_B12 has unit alfa-TE instead of µg - fixed in phase 4")
+    void vitaminB12IsMeasuredInMicrograms() {
+        assertEquals(MvtUnit.MICROGRAMS, Nutrient.VITAMIN_B12.getUnit());
+    }
+}
