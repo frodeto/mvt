@@ -54,7 +54,7 @@ stored in `/opt/homebrew/var/mongodb` and the log is `/opt/homebrew/var/log/mong
 Import the spreadsheet into MongoDB, then start the server:
 
 ```bash
-./mvnw compile exec:java -Dexec.mainClass=control.MvtInitializer
+./mvnw compile exec:java -Dexec.mainClass=no.torvundconsulting.mvt.control.MvtInitializer
 ```
 
 ```bash

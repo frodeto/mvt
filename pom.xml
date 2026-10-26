@@ -12,8 +12,8 @@
         <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <!-- Default for ./mvnw exec:java; override with -Dexec.mainClass=control.MvtInitializer -->
-        <exec.mainClass>control.Mvt</exec.mainClass>
+        <!-- Default for ./mvnw exec:java; override with -Dexec.mainClass=no.torvundconsulting.mvt.control.MvtInitializer -->
+        <exec.mainClass>no.torvundconsulting.mvt.control.Mvt</exec.mainClass>
         <!-- When the importer finishes, give the MongoDB driver's threads 1 s to stop (default 15 s). Its idle
              buffer pool thread never stops, so exec:java warns about it; that warning is harmless -->
         <exec.daemonThreadJoinTimeout>1000</exec.daemonThreadJoinTimeout>
