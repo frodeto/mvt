@@ -33,7 +33,7 @@ import java.util.List;
  * environment variables, see {@link Config}.
  */
 public class MvtInitializer {
-    private static final String MVT_RESOURCE = "/Matvaretabellen+2015.xlsx";
+    private static final String MVT_RESOURCE = "/Matvaretabellen+2026.xlsx";
 
     public static void main(String[] args) throws IOException {
         String target = args.length > 0 ? args[0] : "mongo";

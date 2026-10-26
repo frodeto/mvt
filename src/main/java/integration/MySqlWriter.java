@@ -100,16 +100,15 @@ public class MySqlWriter implements DbWriter {
         try {
             connection.setAutoCommit(false);
             try (PreparedStatement foodItemStatement = connection.prepareStatement(
-                         "INSERT INTO FoodItem (FId, MvtId, Name, PCId, SubGroup, SourceId) VALUES(?,?,?,?,?,?)");
+                         "INSERT INTO FoodItem (FId, MvtId, Name, PCId, SourceId) VALUES(?,?,?,?,?)");
                  PreparedStatement nutrientStatement = connection.prepareStatement(
                          "INSERT INTO FoodNutrients (Amount, FId, NutrientId) VALUES(?,?,?)")) {
                 for (FoodItem foodItem : items) {
                     foodItemStatement.setInt(1, foodItem.id());
                     foodItemStatement.setString(2, foodItem.mvtId());
                     foodItemStatement.setString(3, foodItem.name());
-                    foodItemStatement.setInt(4, foodItem.productSubGroup().productGroup().productCategory().ordinal());
-                    foodItemStatement.setString(5, foodItem.productSubGroup().name());
-                    foodItemStatement.setInt(6, foodItem.dataSource().ordinal());
+                    foodItemStatement.setInt(4, foodItem.productCategory().ordinal());
+                    foodItemStatement.setInt(5, foodItem.dataSource().ordinal());
                     foodItemStatement.addBatch();
                     addNutrients(nutrientStatement, foodItem.id(), foodItem.nutrientMap());
                 }
@@ -240,7 +239,6 @@ public class MySqlWriter implements DbWriter {
                 "FId INT NOT NULL," +
                 "MvtId VARCHAR(20) NOT NULL," +
                 "Name VARCHAR(255) NOT NULL," +
-                "SubGroup VARCHAR(255) NOT NULL," +
                 "PCId INT NOT NULL," +
                 "SourceId INT NOT NULL," +
                 "PRIMARY KEY (FId)," +

@@ -20,12 +20,10 @@ import model.DataSource;
 import model.FoodItem;
 import model.Nutrient;
 import model.ProductCategory;
-import model.ProductGroup;
-import model.ProductSubGroup;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,15 +41,16 @@ import java.util.regex.Pattern;
 /**
  * Reading mvt data from xlsx (which is currently the way it is distributed).
  * <p>
- * Rows are either a grouping level, identified by a code like {@code 1}, {@code 1.4} or {@code 1.4.2}, or a food
- * item, identified by an id like {@code 01.001}. Nutrient values marked {@code M} (missing) are left out of the
- * food item's nutrient map.
+ * Reads the sheet {@value #SHEET_NAME} of Matvaretabellen 2026. The first row holds the column headers, e.g.
+ * "Jern (Fe) (mg)". The other rows are either a category, with only a name like "Meieriprodukter" in the first
+ * column, or a food item, identified by an id like {@code 01.344}. All values are stored as text, and an empty value
+ * means the amount is unknown; such nutrients are left out of the food item's nutrient map.
  */
 public class MvtXlsxReader {
+    static final String SHEET_NAME = "Matvarer (alle næringsstoffer)";
+    private static final String ID_HEADER = "Matvare ID";
+    private static final String NAME_HEADER = "Matvare";
     private static final Pattern FOOD_ITEM_ID_PATTERN = Pattern.compile("\\d{2}\\.\\d{3}");
-    private static final Pattern GROUP_CODE_PATTERN = Pattern.compile("[1-9]\\d*(\\.[1-9]\\d*)*");
-    private static final String HEADER_ID = "MatvareID";
-    private static final String DEFAULT_GROUP_NAME = "Default";
     private static final Logger logger = LoggerFactory.getLogger(MvtXlsxReader.class);
 
     private final InputStream xlsxInput;
@@ -62,87 +61,94 @@ public class MvtXlsxReader {
 
     public List<FoodItem> read() {
         try (XSSFWorkbook workbook = new XSSFWorkbook(xlsxInput)) {
-            return read(workbook.getSheetAt(0));
+            Sheet sheet = workbook.getSheet(SHEET_NAME);
+            if (sheet == null) {
+                throw new XlsxReaderException("Could not find sheet '" + SHEET_NAME + "'");
+            }
+            return read(sheet);
         } catch (IOException e) {
             throw new XlsxReaderException("Could not read xlsx input", e);
         }
     }
 
-    private List<FoodItem> read(XSSFSheet mvtSheet) {
-        Iterator<Row> rowIterator = mvtSheet.rowIterator();
-        Map<Integer, Nutrient> nutrientColumnMap = findNutrientColumns(rowIterator);
+    private List<FoodItem> read(Sheet sheet) {
+        Iterator<Row> rowIterator = sheet.rowIterator();
+        if (!rowIterator.hasNext()) {
+            throw new XlsxReaderException("Sheet '" + SHEET_NAME + "' is empty");
+        }
+        Map<Nutrient, Integer> nutrientColumns = findNutrientColumns(rowIterator.next());
 
         ProductCategory currentProductCategory = null;
-        ProductGroup currentProductGroup = null;
-        ProductSubGroup currentProductSubGroup = null;
         List<FoodItem> foodItems = new ArrayList<>();
         int incrementalId = 0;
         while (rowIterator.hasNext()) {
             Row row = rowIterator.next();
             String code = getCellAsString(row, 0);
-            String name = getCellAsString(row, 1);
 
             if (FOOD_ITEM_ID_PATTERN.matcher(code).matches()) {
-                if (currentProductGroup == null) {
-                    currentProductGroup = new ProductGroup(currentProductCategory, DEFAULT_GROUP_NAME);
+                if (currentProductCategory == null) {
+                    throw new XlsxReaderException("Food item " + code + " in row " + (row.getRowNum() + 1)
+                            + " comes before any category");
                 }
-                if (currentProductSubGroup == null) {
-                    currentProductSubGroup = new ProductSubGroup(currentProductGroup, DEFAULT_GROUP_NAME);
-                }
-                foodItems.add(new FoodItem(++incrementalId, code, name, currentProductSubGroup,
-                        readNutrients(row, nutrientColumnMap), DataSource.MVT));
-            } else if (GROUP_CODE_PATTERN.matcher(code).matches()) {
-                int level = code.split("\\.").length;
-                logger.debug("Row {}: level {} group {} {}", row.getRowNum(), level, code, name);
-                if (level == 1) {
-                    currentProductCategory = ProductCategory.fromMvtId(Integer.parseInt(code));
-                    currentProductGroup = null;
-                    currentProductSubGroup = null;
-                } else if (level == 2) {
-                    currentProductGroup = new ProductGroup(currentProductCategory, name);
-                    currentProductSubGroup = null;
-                } else {
-                    // Level 3 and deeper: the deepest level (e.g. 4.1.1.1 "Fet fisk, rå") is the most specific
-                    currentProductSubGroup = new ProductSubGroup(currentProductGroup, name);
-                }
+                foodItems.add(new FoodItem(++incrementalId, code, getCellAsString(row, 1), currentProductCategory,
+                        readNutrients(row, nutrientColumns), DataSource.MVT));
             } else if (!code.isEmpty()) {
-                logger.debug("Row {}: skipping '{}'", row.getRowNum(), code);
+                logger.debug("Row {}: category {}", row.getRowNum() + 1, code);
+                try {
+                    currentProductCategory = ProductCategory.fromMvtName(code);
+                } catch (IllegalArgumentException e) {
+                    throw new XlsxReaderException("Unknown category '" + code + "' in row " + (row.getRowNum() + 1), e);
+                }
             }
         }
         logger.info("Antall matvarer funnet: {}", foodItems.size());
         return foodItems;
     }
 
-    private Map<Integer, Nutrient> findNutrientColumns(Iterator<Row> rowIterator) {
-        while (rowIterator.hasNext()) {
-            Row row = rowIterator.next();
-            if (HEADER_ID.equals(getCellAsString(row, 0))) {
-                Map<Integer, Nutrient> columnMap = new HashMap<>();
-                for (Cell cell : row) {
-                    Nutrient nutrient = Nutrient.fromMvtName(cell.toString().strip());
-                    if (nutrient != null) {
-                        columnMap.put(cell.getColumnIndex(), nutrient);
-                    }
-                }
-                return columnMap;
+    private static Map<Nutrient, Integer> findNutrientColumns(Row headerRow) {
+        if (!ID_HEADER.equals(getCellAsString(headerRow, 0)) || !NAME_HEADER.equals(getCellAsString(headerRow, 1))) {
+            throw new XlsxReaderException("Expected the first row to start with '" + ID_HEADER + "' and '"
+                    + NAME_HEADER + "'");
+        }
+        Map<String, Integer> columnsByHeader = new HashMap<>();
+        for (Cell cell : headerRow) {
+            columnsByHeader.put(cell.toString().strip(), cell.getColumnIndex());
+        }
+
+        Map<Nutrient, Integer> nutrientColumns = new EnumMap<>(Nutrient.class);
+        List<String> missing = new ArrayList<>();
+        for (Nutrient nutrient : Nutrient.values()) {
+            Integer column = columnsByHeader.get(nutrient.getColumnName());
+            if (column == null) {
+                missing.add(nutrient.getColumnName());
+            } else {
+                nutrientColumns.put(nutrient, column);
             }
         }
-        throw new XlsxReaderException("Could not find header row starting with " + HEADER_ID);
+        if (!missing.isEmpty()) {
+            throw new XlsxReaderException("Missing nutrient columns: " + missing);
+        }
+        return nutrientColumns;
     }
 
-    private static Map<Nutrient, Double> readNutrients(Row row, Map<Integer, Nutrient> nutrientColumnMap) {
+    private static Map<Nutrient, Double> readNutrients(Row row, Map<Nutrient, Integer> nutrientColumns) {
         Map<Nutrient, Double> nutrientMap = new EnumMap<>(Nutrient.class);
-        nutrientColumnMap.forEach((column, nutrient) -> {
-            Cell cell = row.getCell(column);
-            if (cell != null && cell.getCellType() == CellType.NUMERIC) {
-                nutrientMap.put(nutrient, cell.getNumericCellValue());
+        nutrientColumns.forEach((nutrient, column) -> {
+            String value = getCellAsString(row, column);
+            if (!value.isEmpty()) {
+                try {
+                    nutrientMap.put(nutrient, Double.parseDouble(value));
+                } catch (NumberFormatException e) {
+                    throw new XlsxReaderException("Invalid value '" + value + "' for " + nutrient.getColumnName()
+                            + " in row " + (row.getRowNum() + 1), e);
+                }
             }
         });
         return nutrientMap;
     }
 
     /**
-     * The cell's text. Whole numbers are written without decimals, since some group codes are stored as numbers.
+     * The cell's text, without surrounding whitespace. Numbers are written without a decimal part when they are whole.
      */
     private static String getCellAsString(Row row, int column) {
         Cell cell = row.getCell(column);
@@ -156,7 +162,7 @@ public class MvtXlsxReader {
         return cell.toString().strip();
     }
 
-    private static class XlsxReaderException extends RuntimeException {
+    static class XlsxReaderException extends RuntimeException {
         XlsxReaderException(String message, Throwable cause) {
             super(message, cause);
         }

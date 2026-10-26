@@ -6,8 +6,6 @@ import model.DataSource;
 import model.FoodItem;
 import model.Nutrient;
 import model.ProductCategory;
-import model.ProductGroup;
-import model.ProductSubGroup;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,11 +21,9 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MvtServerTest {
-    private static final ProductSubGroup EGG_GROUP =
-            new ProductSubGroup(new ProductGroup(ProductCategory.EGG, "Egg, rå"), "Default");
     private static final List<FoodItem> FOOD_ITEMS = List.of(
-            new FoodItem(1, "01.002", "Lettmelk", EGG_GROUP, Map.of(Nutrient.PROTEIN, 3.4, Nutrient.WATER, 90.0), DataSource.MVT),
-            new FoodItem(2, "02.001", "Egg, rå", EGG_GROUP, Map.of(Nutrient.PROTEIN, 12.4, Nutrient.WATER, 75.0), DataSource.MVT));
+            new FoodItem(1, "01.002", "Lettmelk", ProductCategory.EGG, Map.of(Nutrient.PROTEIN, 3.4, Nutrient.WATER, 90.0), DataSource.MVT),
+            new FoodItem(2, "02.001", "Egg, rå", ProductCategory.EGG, Map.of(Nutrient.PROTEIN, 12.4, Nutrient.WATER, 75.0), DataSource.MVT));
 
     private static MvtServer server;
     private static final HttpClient client = HttpClient.newHttpClient();

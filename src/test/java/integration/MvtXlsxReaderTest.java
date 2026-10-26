@@ -3,116 +3,160 @@ package integration;
 import model.FoodItem;
 import model.Nutrient;
 import model.ProductCategory;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class MvtXlsxReaderTest {
     private static List<FoodItem> foodItems;
-    private static List<FoodItem> allFoodItems;
 
     @BeforeAll
-    static void readSheets() throws IOException {
-        foodItems = read("/Matvaretabellen+2015-truncated.xlsx");
-        allFoodItems = read("/Matvaretabellen+2015.xlsx");
+    static void readSheet() throws IOException {
+        try (InputStream in = MvtXlsxReaderTest.class.getResourceAsStream("/Matvaretabellen+2026.xlsx")) {
+            foodItems = new MvtXlsxReader(in).read();
+        }
     }
 
     @Test
     void readsAllFoodItems() {
-        assertEquals(235, foodItems.size());
-        assertEquals(1543, allFoodItems.size());
-    }
-
-    @Test
-    void skipsFooterRows() {
-        assertTrue(allFoodItems.stream().noneMatch(item -> item.name().isEmpty()));
-        assertTrue(allFoodItems.stream().allMatch(item -> item.mvtId().matches("\\d{2}\\.\\d{3}")));
+        assertEquals(2121, foodItems.size());
+        assertTrue(foodItems.stream().allMatch(item -> item.mvtId().matches("\\d{2}\\.\\d{3}")));
     }
 
     @Test
     void keepsSourceIdAndAssignsSequentialIds() {
-        FoodItem milk = foodItems.getFirst();
-        assertEquals(1, milk.id());
-        assertEquals("01.001", milk.mvtId());
-        assertEquals("Helmelk, 3,5 % fett", milk.name());
+        FoodItem first = foodItems.getFirst();
+        assertEquals(1, first.id());
+        assertEquals("01.344", first.mvtId());
+        assertEquals("Appenzeller, ost", first.name());
     }
 
     @Test
-    void readsNutrientValues() {
-        FoodItem milk = byName("Helmelk, 3,5 % fett");
-        assertEquals(87.0, milk.nutrientMap().get(Nutrient.WATER));
-        assertEquals(262.0, milk.nutrientMap().get(Nutrient.ENERGY));
-        assertEquals(63.0, milk.nutrientMap().get(Nutrient.CALORIES));
-        assertEquals(3.5, milk.nutrientMap().get(Nutrient.FAT));
-        assertEquals(2.3, milk.nutrientMap().get(Nutrient.SATURATED_FAT));
+    void readsNutrientValuesStoredAsText() {
+        FoodItem appenzeller = byName("Appenzeller, ost");
+        assertEquals(1586.0, appenzeller.nutrientMap().get(Nutrient.ENERGY));
+        assertEquals(383.0, appenzeller.nutrientMap().get(Nutrient.CALORIES));
+        assertEquals(44.0, appenzeller.nutrientMap().get(Nutrient.WATER));
+        assertEquals(31.7, appenzeller.nutrientMap().get(Nutrient.FAT));
+        assertEquals(19.0, appenzeller.nutrientMap().get(Nutrient.SATURATED_FAT));
+        assertEquals(0.6, appenzeller.nutrientMap().get(Nutrient.TRANS_FAT));
+        assertEquals(24.3, appenzeller.nutrientMap().get(Nutrient.PROTEIN));
+        assertEquals(0.3, appenzeller.nutrientMap().get(Nutrient.IRON));
+        assertEquals(1.0, appenzeller.nutrientMap().get(Nutrient.VITAMIN_E));
     }
 
     @Test
-    void treatsMissingValuesAsAbsent() {
-        FoodItem egg = byName("Egg, rå");
-        assertEquals(12.4, egg.nutrientMap().get(Nutrient.PROTEIN));
-        assertFalse(egg.nutrientMap().containsKey(Nutrient.OMEGA3));
+    void treatsEmptyValuesAsUnknown() {
+        FoodItem burrata = byName("Burrata, ost");
+        assertEquals(25.7, burrata.nutrientMap().get(Nutrient.FAT));
+        assertFalse(burrata.nutrientMap().containsKey(Nutrient.TRANS_FAT));
     }
 
     @Test
-    void assignsProductCategories() {
-        assertEquals(ProductCategory.DAIRY, categoryOf("Helmelk, 3,5 % fett"));
-        assertEquals(ProductCategory.EGG, categoryOf("Egg, rå"));
-        assertEquals(ProductCategory.POULTRY_AND_MEAT, categoryOf("And, kjøtt med skinn, rå"));
+    void assignsCategoryFromPrecedingCategoryRow() {
+        assertEquals(ProductCategory.DAIRY, byName("Appenzeller, ost").productCategory());
+        assertEquals(ProductCategory.EGG, byName("Egg, kokt").productCategory());
+        assertEquals(ProductCategory.SUGAR_AND_SWEETS, byName("Agavesirup").productCategory());
+        assertEquals(ProductCategory.FATS_AND_OILS, byName("Aioli").productCategory());
+        // The id prefix does not decide the category: 01.xxx is not always dairy
+        assertEquals(ProductCategory.MIXED_FOODS_AND_DISHES, byName("Kaffehvitt").productCategory());
     }
 
     @Test
-    void assignsCategoriesStoredAsNumbers() {
-        // Category rows 1, 3, 8 and 11 are numeric cells (1.0, 3.0, ...) in the sheet
-        assertEquals(ProductCategory.BUTTER_AND_OILS, categoryOf(allFoodItems, "Smør"));
-        assertEquals(ProductCategory.INFANT_FOODS, categoryOf(allFoodItems, "Morsmelk"));
-        assertTrue(allFoodItems.stream().allMatch(item ->
-                item.productSubGroup().productGroup().productCategory() != null));
+    void usesAllCategories() {
+        assertEquals(EnumSet.allOf(ProductCategory.class),
+                foodItems.stream().map(FoodItem::productCategory).collect(Collectors.toCollection(() -> EnumSet.noneOf(ProductCategory.class))));
     }
 
     @Test
-    void usesDeepestGroupLevelAsSubGroup() {
-        // 4.1.1 Fet fisk > 4.1.1.1 Fet fisk, rå > 04.001 Blåkveite
-        assertEquals("Fet fisk, rå", byName(allFoodItems, "Blåkveite, rå/kaldrøkt").productSubGroup().name());
+    void stripsSurroundingWhitespace() {
+        // The sheet has the id "01.332 " and names with trailing spaces
+        assertTrue(foodItems.stream().anyMatch(item -> item.mvtId().equals("01.332")));
+        assertEquals(ProductCategory.FISH_AND_SHELLFISH,
+                byName("Akkar, tiarmet blekksprut, innbakt, forfritert, fryst").productCategory());
+        assertTrue(foodItems.stream().allMatch(item -> item.name().equals(item.name().strip())));
     }
 
     @Test
-    void readsAddedSugar() {
-        assertEquals(0.0, byName("Helmelk, 3,5 % fett").nutrientMap().get(Nutrient.ADDED_SUGAR));
+    void rejectsWorkbookWithoutSheet() {
+        var e = assertThrows(MvtXlsxReader.XlsxReaderException.class,
+                () -> read(workbook("Matvarer", header(), List.of())));
+        assertTrue(e.getMessage().contains(MvtXlsxReader.SHEET_NAME), e.getMessage());
     }
 
     @Test
-    void assignsSubGroupBelongingToCurrentGroup() {
-        assertEquals("Fjørfe, rå", byName("And, kjøtt med skinn, rå").productSubGroup().name());
-        assertEquals(ProductCategory.EGG,
-                byName("Egg, rå").productSubGroup().productGroup().productCategory());
+    void rejectsMissingNutrientColumn() {
+        List<String> header = new ArrayList<>(header());
+        header.remove(Nutrient.IRON.getColumnName());
+        var e = assertThrows(MvtXlsxReader.XlsxReaderException.class,
+                () -> read(workbook(MvtXlsxReader.SHEET_NAME, header, List.of())));
+        assertTrue(e.getMessage().contains("Jern (Fe) (mg)"), e.getMessage());
     }
 
-    private static List<FoodItem> read(String resource) throws IOException {
-        try (InputStream in = MvtXlsxReaderTest.class.getResourceAsStream(resource)) {
-            return new MvtXlsxReader(in).read();
-        }
+    @Test
+    void rejectsUnknownCategory() {
+        var e = assertThrows(MvtXlsxReader.XlsxReaderException.class,
+                () -> read(workbook(MvtXlsxReader.SHEET_NAME, header(), List.of(List.of("Romkost")))));
+        assertTrue(e.getMessage().contains("Romkost"), e.getMessage());
     }
 
-    private static ProductCategory categoryOf(String name) {
-        return categoryOf(foodItems, name);
+    @Test
+    void rejectsInvalidValue() {
+        List<List<String>> rows = List.of(List.of("Egg"), List.of("02.001", "Egg, rå", "1,5"));
+        var e = assertThrows(MvtXlsxReader.XlsxReaderException.class,
+                () -> read(workbook(MvtXlsxReader.SHEET_NAME, header(), rows)));
+        assertTrue(e.getMessage().contains("'1,5'"), e.getMessage());
     }
 
-    private static ProductCategory categoryOf(List<FoodItem> items, String name) {
-        return byName(items, name).productSubGroup().productGroup().productCategory();
+    @Test
+    void rejectsFoodItemBeforeCategory() {
+        assertThrows(MvtXlsxReader.XlsxReaderException.class,
+                () -> read(workbook(MvtXlsxReader.SHEET_NAME, header(), List.of(List.of("02.001", "Egg, rå")))));
     }
 
     private static FoodItem byName(String name) {
-        return byName(foodItems, name);
+        return foodItems.stream().filter(f -> f.name().equals(name)).findFirst()
+                .orElseThrow(() -> new AssertionError("No food item named " + name));
     }
 
-    private static FoodItem byName(List<FoodItem> items, String name) {
-        return items.stream().filter(f -> f.name().equals(name)).findFirst()
-                .orElseThrow(() -> new AssertionError("No food item named " + name));
+    private static List<FoodItem> read(InputStream in) {
+        return new MvtXlsxReader(in).read();
+    }
+
+    private static List<String> header() {
+        List<String> header = new ArrayList<>(List.of("Matvare ID", "Matvare"));
+        Arrays.stream(Nutrient.values()).map(Nutrient::getColumnName).forEach(header::add);
+        return header;
+    }
+
+    private static InputStream workbook(String sheetName, List<String> header, List<List<String>> rows) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet(sheetName);
+            List<List<String>> allRows = new ArrayList<>();
+            allRows.add(header);
+            allRows.addAll(rows);
+            for (int r = 0; r < allRows.size(); r++) {
+                Row row = sheet.createRow(r);
+                for (int c = 0; c < allRows.get(r).size(); c++) {
+                    row.createCell(c).setCellValue(allRows.get(r).get(c));
+                }
+            }
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        }
     }
 }

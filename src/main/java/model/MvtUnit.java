@@ -28,7 +28,7 @@ public enum MvtUnit {
     MILLIGRAMS("mg"),
     MICROGRAMS("µg"),
     RAE("RAE"),
-    ALFA_TE("alfa-TE");
+    ALFA_TE("mg-ATE");
 
     private final String symbol;
 

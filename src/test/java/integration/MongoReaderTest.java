@@ -5,8 +5,6 @@ import model.DataSource;
 import model.FoodItem;
 import model.Nutrient;
 import model.ProductCategory;
-import model.ProductGroup;
-import model.ProductSubGroup;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
@@ -31,8 +29,7 @@ class MongoReaderTest {
     void foodItemSurvivesMongoDocumentRoundTrip() {
         // Same conversions as MongoWriter (FoodItem -> Document) and MongoReader (Document -> FoodItem)
         Gson gson = new Gson();
-        ProductSubGroup subGroup = new ProductSubGroup(new ProductGroup(ProductCategory.EGG, "Egg, rå"), "Default");
-        FoodItem egg = new FoodItem(7, "02.001", "Egg, rå", subGroup,
+        FoodItem egg = new FoodItem(7, "02.001", "Egg, rå", ProductCategory.EGG,
                 Map.of(Nutrient.PROTEIN, 12.4, Nutrient.IODINE, 49.0), DataSource.MVT);
 
         Document document = Document.parse(gson.toJson(egg));
@@ -41,7 +38,7 @@ class MongoReaderTest {
         assertEquals(egg, restored);
         assertEquals("02.001", restored.mvtId());
         assertEquals(egg.nutrientMap(), restored.nutrientMap());
-        assertEquals(subGroup, restored.productSubGroup());
+        assertEquals(ProductCategory.EGG, restored.productCategory());
         assertEquals(7, document.getInteger("id"));
     }
 

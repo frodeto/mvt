@@ -1,6 +1,6 @@
 # mvt
 
-Search the Norwegian food composition table ([Matvaretabellen](https://www.matvaretabellen.no) 2015) by nutrient content.
+Search the Norwegian food composition table ([Matvaretabellen](https://www.matvaretabellen.no) 2026) by nutrient content.
 
 - `MvtInitializer` imports the spreadsheet in `src/main/resources` into MongoDB (or MySQL).
 - `Mvt` loads the imported food items and serves a JSON API on embedded Tomcat.
@@ -82,9 +82,10 @@ To import into MySQL instead, pass `-Dexec.args=mysql` to the import and set `MY
 | `GET /nutrients`                             | All nutrients: `[{"id":0,"name":"Vann"}, ...]`                  |
 | `GET /nutrient/{id}`                         | One nutrient with its English name and unit                     |
 | `GET /search?Nutrient={name}&Amount={level}` | Food items with at least `level` of the nutrient (per 100 g)    |
-| `GET /fooditem/{id}`                         | One food item with group, category and all known nutrient values |
+| `GET /fooditem/{id}`                         | One food item with its category and all known nutrient values   |
 
-`Nutrient` is the Norwegian column name from the spreadsheet, e.g. `Protein`, `Jern` or `Vitamin C` (case insensitive).
+`Nutrient` is the short Norwegian name listed by `GET /nutrients`, e.g. `Protein`, `Jern` or `Vitamin C` (case
+insensitive). These are the column names from the 2015 edition, kept so the API stays the same.
 Invalid input gives `400` and unknown ids give `404`, both with a body like `{"error":"..."}`.
 
 ```bash
@@ -115,14 +116,14 @@ db.IMPORT.findOne()
 
 // Look up by name or by the spreadsheet's id
 db.FOODITEM.find({ name: /^Laks/ }, { _id: 0, id: 1, mvtId: 1, name: 1 })
-db.FOODITEM.findOne({ mvtId: "01.001" })
+db.FOODITEM.findOne({ mvtId: "01.344" })
 
 // The 5 food items with most iron (mg per 100 g)
 db.FOODITEM.find({}, { _id: 0, name: 1, "nutrientMap.IRON": 1 }).sort({ "nutrientMap.IRON": -1 }).limit(5)
 
 // Number of food items per product category
 db.FOODITEM.aggregate([
-    { $group: { _id: "$productSubGroup.productGroup.productCategory", items: { $sum: 1 } } },
+    { $group: { _id: "$productCategory", items: { $sum: 1 } } },
     { $sort: { items: -1 } }
 ])
 ```
@@ -137,6 +138,15 @@ connection string:
 mongosh --quiet mongodb://localhost:27017/mvt20261026120446 --eval 'db.FOODITEM.countDocuments()'
 ```
 
+## Updating the food data
+
+The importer reads the sheet "Matvarer (alle næringsstoffer)" of the spreadsheet downloaded from
+[matvaretabellen.no](https://www.matvaretabellen.no). To use a newer edition, replace the file in `src/main/resources`
+and update `MVT_RESOURCE` in `MvtInitializer`. The import stops with an error if a nutrient column or category it
+expects is missing or renamed; update `Nutrient` or `ProductCategory` to match.
+
 ## License
 
 Apache License 2.0, see [LICENSE](LICENSE).
+
+The food data is from Matvaretabellen 2026, Mattilsynet, [www.matvaretabellen.no](https://www.matvaretabellen.no).
