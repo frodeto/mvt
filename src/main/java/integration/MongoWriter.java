@@ -20,8 +20,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Indexes;
 import model.FoodItem;
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -29,20 +29,21 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
- *
+ * Writes each import to a new Mongo database, and drops older imports once the new one is complete.
  */
 public class MongoWriter implements DbWriter {
+    private static final DateTimeFormatter DB_NAME_SUFFIX = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
-    private static final String TIMESTAMP_KEY = "timestamp";
-    private MongoClient mongoClient;
-    private String dbName = null;
-    private Gson gson = new GsonBuilder().create();
+    private final MongoClient mongoClient;
+    private final Gson gson = new GsonBuilder().create();
     private final Logger logger = LoggerFactory.getLogger(MongoWriter.class);
+    private LocalDateTime timestamp;
+    private String dbName;
 
     public MongoWriter() {
         mongoClient = MongoClients.create();
@@ -50,39 +51,43 @@ public class MongoWriter implements DbWriter {
 
     @Override
     public MongoWriter initDb() {
-        dropOldDb();
-        LocalDateTime timestamp = LocalDateTime.now();
-        dbName = Db.DB_NAME + timestamp.format(DateTimeFormatter.BASIC_ISO_DATE);
-        MongoDatabase db = mongoClient.getDatabase(dbName);
-        logger.info("Initialized mongo db '{}'", dbName);
-        timeStamp(timestamp, db);
+        timestamp = LocalDateTime.now();
+        dbName = Db.DB_NAME + timestamp.format(DB_NAME_SUFFIX);
+        logger.info("Importing to mongo db '{}'", dbName);
         return this;
     }
 
     @Override
-    public DbWriter writeItems(List<FoodItem> items) {
-        List<Document> jsonItems = items.stream().map(toDocument).collect(Collectors.toList());
+    public MongoWriter writeItems(List<FoodItem> items) {
+        if (dbName == null) {
+            throw new IllegalStateException("initDb() must be called before writeItems()");
+        }
         MongoDatabase db = mongoClient.getDatabase(dbName);
-        MongoCollection<Document> collection = db.getCollection(Db.MVT_MAIN_TABLE_NAME);
-        collection.insertMany(jsonItems);
+        if (!items.isEmpty()) {
+            var collection = db.getCollection(Db.MVT_MAIN_TABLE_NAME);
+            collection.insertMany(items.stream().map(toDocument).toList());
+            collection.createIndex(Indexes.ascending("id"));
+        }
+        // Written last: readers only use databases with an import timestamp, so they never see a partial import
+        db.getCollection(Db.IMPORT).insertOne(new Document(Db.TIMESTAMP_KEY, timestamp.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+        logger.info("Wrote {} food items to mongo db '{}'", items.size(), dbName);
+        dropOldDbs();
         return this;
     }
 
-    private void dropOldDb() {
-        for (String databaseName : mongoClient.listDatabaseNames()) {
-            if(databaseName.contains(Db.DB_NAME)) {
-                String timestamp = (String) mongoClient.getDatabase(databaseName)
-                        .getCollection(Db.IMPORT).find().first().get(TIMESTAMP_KEY);
+    @Override
+    public void close() {
+        mongoClient.close();
+    }
+
+    private void dropOldDbs() {
+        for (String databaseName : mongoClient.listDatabaseNames().into(new ArrayList<>())) {
+            if (Db.isMvtDatabase(databaseName) && !databaseName.equals(dbName)) {
                 mongoClient.getDatabase(databaseName).drop();
-                logger.info("Dropped mongo db '{}' with timestamp '{}'", databaseName, timestamp);
+                logger.info("Dropped old mongo db '{}'", databaseName);
             }
         }
     }
 
-    private void timeStamp(LocalDateTime timestamp, MongoDatabase db) {
-        MongoCollection<Document> collection = db.getCollection(Db.IMPORT);
-        collection.insertOne(new Document(TIMESTAMP_KEY, timestamp.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
-    }
-
-    private Function<FoodItem, Document> toDocument = foodItem -> Document.parse(gson.toJson(foodItem));
+    private final Function<FoodItem, Document> toDocument = foodItem -> Document.parse(gson.toJson(foodItem));
 }

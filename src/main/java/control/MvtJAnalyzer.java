@@ -36,7 +36,7 @@ public class MvtJAnalyzer implements MvtAnalyzer {
     public List<FoodItemReference> getAboveLevel(Nutrient nutrient, Double level) {
         return foodItems.stream().filter(foodItem -> {
             Double thisLevel = foodItem.getNutrientMap().get(nutrient);
-            return thisLevel >= level;
+            return thisLevel != null && thisLevel >= level;
         }).map(foodItem -> new FoodItemReference(foodItem.getId(), foodItem.getName(), foodItem.getDataSource()))
                 .collect(Collectors.toList());
     }

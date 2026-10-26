@@ -16,38 +16,31 @@
 
 package control;
 
+import integration.DbWriter;
 import integration.MongoWriter;
 import integration.MvtXlsxReader;
 import model.FoodItem;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 /**
  * Reading from sources, populating data storages
  */
 public class MvtInitializer {
-    public static void main(String[] args) {
-        Path path = FileSystems.getDefault().getPath("target/classes", "Matvaretabellen+2015.xlsx");
-        InputStream xlsxInputStream = null;
-        if (Files.exists(path) && Files.isReadable(path)) {
-            try {
-                xlsxInputStream = Files.newInputStream(path);
-            } catch (IOException e) {
-                System.err.println("Could not read " + path.toString());
-                e.printStackTrace();
-                System.exit(1);
+    private static final String MVT_RESOURCE = "/Matvaretabellen+2015.xlsx";
+
+    public static void main(String[] args) throws IOException {
+        List<FoodItem> foodItems;
+        try (InputStream xlsxInputStream = MvtInitializer.class.getResourceAsStream(MVT_RESOURCE)) {
+            if (xlsxInputStream == null) {
+                throw new IllegalStateException("Could not find resource " + MVT_RESOURCE + " on the classpath");
             }
-        } else {
-            System.err.println("Could not find resource " + path.toString());
-            System.exit(1);
+            foodItems = new MvtXlsxReader(xlsxInputStream).read();
         }
-        List<FoodItem> foodItems = new MvtXlsxReader(xlsxInputStream).read();
-        new MongoWriter().initDb().writeItems(foodItems).close();
-        //new MySqlWriter().initDb().writeItems(foodItems).close();
+        try (DbWriter writer = new MongoWriter()) {
+            writer.initDb().writeItems(foodItems);
+        }
     }
 }
