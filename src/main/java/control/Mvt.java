@@ -14,82 +14,40 @@
  * limitations under the License.
  */
 
+
 package control;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import integration.FoodItemReference;
 import integration.MongoReader;
-import integration.NutrientReference;
-import model.FoodItem;
-import model.Nutrient;
+import org.apache.catalina.LifecycleException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.Request;
-
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static spark.Spark.*;
+import org.slf4j.bridge.SLF4JBridgeHandler;
+import web.MvtServer;
 
 /**
- *
+ * Starts the MVT web server. The port is read from the PORT environment variable (default 4567).
  */
 public class Mvt {
     private static final Logger logger = LoggerFactory.getLogger(Mvt.class);
-    private static Gson gson = new GsonBuilder().create();
-    private final MongoReader mongoReader;
-    private final MvtAnalyzer analyzer;
+    private static final int DEFAULT_PORT = 4567;
 
-    public static void main(String[] args) {
-        Mvt mvt = new Mvt();
+    public static void main(String[] args) throws LifecycleException {
+        // Tomcat logs through java.util.logging
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
 
-        // Define SPARK interface:
-        get("/search", (req, res) -> mvt.executeSearch(req), gson::toJson);
-        get("/nutrients", (req, res) -> mvt.retrieveNutrients(), gson::toJson);
-        get("/:name/:id", (req, res) -> mvt.retrieve(req), gson::toJson);
-
-        // Define SPARK filters:
-        before((req, res) -> logger.info("Received {}", req.url()));
-        after((req, res) -> logger.info("Response: {}", res.raw()));
-
+        int port = Integer.parseInt(System.getenv().getOrDefault("PORT", String.valueOf(DEFAULT_PORT)));
+        MongoReader mongoReader = new MongoReader();
+        MvtServer server = new MvtServer(port, new MvtJAnalyzer(mongoReader.findAll()), mongoReader);
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                server.close();
+            } catch (LifecycleException e) {
+                logger.warn("Failed to stop server", e);
+            }
+        }));
+        server.start();
+        logger.info("MVT server listening on port {}", server.port());
+        server.await();
     }
-
-    private List<NutrientReference> retrieveNutrients() {
-        return Stream.of(Nutrient.values()).map(nutrient -> new NutrientReference(nutrient.ordinal(), nutrient.getMvtName()))
-                .collect(Collectors.toList());
-    }
-
-    private Mvt() {
-        mongoReader = new MongoReader();
-        analyzer = new MvtJAnalyzer(mongoReader.retrieveAll());
-    }
-
-    private List<FoodItemReference> executeSearch(Request req) {
-        Nutrient nutrient = Nutrient.fromMvtName(req.queryParams("Nutrient"));
-        double amount = Double.parseDouble(req.queryParams("Amount"));
-        return  analyzer.getAboveLevel(nutrient, amount);
-    }
-
-    private Object retrieve(Request req) {
-        switch (req.params(":name").toLowerCase()) {
-            case "fooditem":
-                return retrieveFoodItem(req.params(":id"));
-            case "nutrient":
-                return retrieveNutrient(req.params(":id"));
-            default:
-                return null;
-        }
-    }
-
-    private Nutrient retrieveNutrient(String params) {
-        logger.info(params);
-        return null;
-    }
-
-    private FoodItem retrieveFoodItem(String id) {
-        return mongoReader.get(Integer.decode(id));
-    }
-
 }

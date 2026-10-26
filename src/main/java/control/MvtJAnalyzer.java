@@ -23,11 +23,11 @@ import model.Nutrient;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class MvtJAnalyzer implements MvtAnalyzer {
+public class MvtJAnalyzer implements MvtAnalyzer {
 
     private final List<FoodItem> foodItems;
 
-    MvtJAnalyzer(List<FoodItem> foodItems) {
+    public MvtJAnalyzer(List<FoodItem> foodItems) {
         this.foodItems = foodItems;
 
     }

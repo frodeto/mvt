@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -40,7 +41,7 @@ import static com.mongodb.client.model.Filters.eq;
 /**
  *
  */
-public class MongoReader {
+public class MongoReader implements FoodItemRepository {
     private static final String TIMESTAMP_KEY = "timestamp";
     private MongoClient mongoClient;
     private MongoDatabase mvtDb;
@@ -53,13 +54,15 @@ public class MongoReader {
         findCurrentDb();
     }
 
-    public List<FoodItem> retrieveAll() {
+    @Override
+    public List<FoodItem> findAll() {
         logger.info("Reading {} objects from database", mvtCollection.countDocuments());
         return mvtCollection.find().into(new ArrayList<>()).stream().map(toFoodItem).collect(Collectors.toList());
     }
 
-    public FoodItem get(Integer id) {
-        return mvtCollection.find(eq("id", id)).into(new ArrayList<>()).stream().map(toFoodItem).findAny().orElse(null);
+    @Override
+    public Optional<FoodItem> findById(int id) {
+        return Optional.ofNullable(mvtCollection.find(eq("id", id)).first()).map(toFoodItem);
     }
 
     private Function<Document, FoodItem> toFoodItem = document -> gson.fromJson(document.toJson(), FoodItem.class);
