@@ -1,7 +1,7 @@
 package web;
 
 import control.MvtJAnalyzer;
-import integration.FoodItemRepository;
+import integration.InMemoryFoodItemRepository;
 import model.DataSource;
 import model.FoodItem;
 import model.Nutrient;
@@ -19,7 +19,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,7 +34,7 @@ class MvtServerTest {
 
     @BeforeAll
     static void startServer() throws Exception {
-        server = new MvtServer(0, new MvtJAnalyzer(FOOD_ITEMS), new InMemoryRepository());
+        server = new MvtServer(0, new MvtJAnalyzer(FOOD_ITEMS), new InMemoryFoodItemRepository(FOOD_ITEMS));
         server.start();
     }
 
@@ -120,17 +119,5 @@ class MvtServerTest {
     private static HttpResponse<String> get(String path) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + server.port() + path)).build();
         return client.send(request, HttpResponse.BodyHandlers.ofString());
-    }
-
-    private static class InMemoryRepository implements FoodItemRepository {
-        @Override
-        public List<FoodItem> findAll() {
-            return FOOD_ITEMS;
-        }
-
-        @Override
-        public Optional<FoodItem> findById(int id) {
-            return FOOD_ITEMS.stream().filter(item -> item.id() == id).findFirst();
-        }
     }
 }

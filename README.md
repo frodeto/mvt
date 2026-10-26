@@ -30,6 +30,8 @@ Import the spreadsheet into MongoDB, then start the server:
 ./mvnw exec:java
 ```
 
+The server loads all food items at startup. After a new import, restart the server to serve the new data.
+
 To import into MySQL instead, pass `-Dexec.args=mysql` to the import and set `MYSQL_PASSWORD`. The database must exist.
 
 ### Configuration
