@@ -17,6 +17,8 @@
 
 package control;
 
+import integration.FoodItemRepository;
+import integration.InMemoryFoodItemRepository;
 import integration.MongoReader;
 import org.apache.catalina.LifecycleException;
 import org.slf4j.Logger;
@@ -35,15 +37,18 @@ public class Mvt {
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
 
-        MongoReader mongoReader = new MongoReader(Config.mongoUri());
-        MvtServer server = new MvtServer(Config.port(), new MvtJAnalyzer(mongoReader.findAll()), mongoReader);
+        // Search and lookups use the same snapshot, so they stay consistent when a new import replaces the database
+        FoodItemRepository foodItems;
+        try (MongoReader mongoReader = new MongoReader(Config.mongoUri())) {
+            foodItems = new InMemoryFoodItemRepository(mongoReader.findAll());
+        }
+        MvtServer server = new MvtServer(Config.port(), new MvtJAnalyzer(foodItems.findAll()), foodItems);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 server.close();
             } catch (LifecycleException e) {
                 logger.warn("Failed to stop server", e);
             }
-            mongoReader.close();
         }));
         server.start();
         logger.info("MVT server listening on port {}", server.port());

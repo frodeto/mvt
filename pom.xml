@@ -14,6 +14,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- Default for ./mvnw exec:java; override with -Dexec.mainClass=control.MvtInitializer -->
         <exec.mainClass>control.Mvt</exec.mainClass>
+        <!-- The MongoDB driver leaves an idle daemon thread; don't wait 15 s for it when the importer finishes -->
+        <exec.cleanupDaemonThreads>false</exec.cleanupDaemonThreads>
 
         <tomcat.version>11.0.27</tomcat.version>
         <poi.version>6.0.0</poi.version>
