@@ -24,17 +24,15 @@ import java.util.Map;
  * Structure:
  * {@link Category}
  *  |-  {@link ProductCategory}
- *      |-  {@link ProductGroup}
- *          |-  {@link ProductSubGroup}
- *              |-  {@link FoodItem}
+ *      |-  {@link FoodItem}
  *
- *  E.g.: [DAIRY] - [Melk og melkeprodukter] - [Ost] - [Ost, ekstra fet] - [Ridderost]
+ *  E.g.: [DAIRY] - [Meieriprodukter] - [Appenzeller, ost]
  *
  * @param id          sequential id assigned on import
- * @param mvtId       the id used in the source data, e.g. "01.001" in MVT
+ * @param mvtId       the id used in the source data, e.g. "01.344" in MVT
  * @param nutrientMap amount of each nutrient per 100 g; nutrients without a known value are absent
  */
-public record FoodItem(int id, String mvtId, String name, ProductSubGroup productSubGroup,
+public record FoodItem(int id, String mvtId, String name, ProductCategory productCategory,
                        Map<Nutrient, Double> nutrientMap, DataSource dataSource) {
 
     public FoodItem {

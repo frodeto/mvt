@@ -19,45 +19,46 @@ package model;
 import java.util.Arrays;
 
 /**
- * Corresponds to first level of grouping in MVT
+ * The food categories in Matvaretabellen, in the order they appear in the spreadsheet.
  * Structure:
  * {@link Category}
  *  |-  {@link ProductCategory}
- *      |-  {@link ProductGroup}
- *          |-  {@link ProductSubGroup}
- *              |-  {@link FoodItem}
+ *      |-  {@link FoodItem}
  *
- *  E.g.: [DAIRY] - [Melk og melkeprodukter] - [Ost] - [Ost, ekstra fet] - [Ridderost]
+ *  E.g.: [DAIRY] - [Meieriprodukter] - [Appenzeller, ost]
  */
 public enum ProductCategory {
 
-    DAIRY(1, "Melk og melkeprodukter", Category.DAIRY),
-    EGG(2, "Egg", Category.EGG),
-    POULTRY_AND_MEAT(3, "Fjørfe og kjøtt", Category.MEAT_OR_FISH),
-    FISH_AND_SHELLFISH(4, "Fisk og skalldyr", Category.MEAT_OR_FISH),
-    GRAIN_BREAD_CEREALS_ETC(5, "Korn- og bakevarer, frø og nøtter", Category.VEGETABLE),
-    POTATOES_FRUIT_VEGETABLES(6, "Poteter, grønnsaker, frukt og bær", Category.VEGETABLE),
-    SUGAR_AND_SWEETS(7, "Sukker og søte produkter", Category.VEGETABLE),
-    BUTTER_AND_OILS(8, "Margarin, smør, matolje o.l.", Category.MIXED),
-    BEVERAGES(9, "Drikke", Category.OTHER),
-    DISHES_AND_PRODUCTS(10, "Diverse retter, produkter og ingredienser", Category.MIXED),
-    INFANT_FOODS(11, "Spedbarnsmat", Category.MIXED);
+    DAIRY("Meieriprodukter", Category.DAIRY),
+    EGG("Egg", Category.EGG),
+    MEAT_AND_POULTRY("Kjøtt og fjørfe", Category.MEAT_OR_FISH),
+    FISH_AND_SHELLFISH("Fisk og skalldyr", Category.MEAT_OR_FISH),
+    LEGUMES("Belgvekster", Category.VEGETABLE),
+    FRUIT_AND_BERRIES("Frukt og bær", Category.VEGETABLE),
+    NUTS_AND_SEEDS("Nøtter og frø", Category.VEGETABLE),
+    POTATOES("Poteter", Category.VEGETABLE),
+    HERBS_AND_SPICES("Urter og krydder", Category.VEGETABLE),
+    GRAIN_AND_BAKERY("Korn- og bakevarer", Category.VEGETABLE),
+    VEGETABLES("Grønnsaker", Category.VEGETABLE),
+    BEVERAGES("Drikke", Category.OTHER),
+    MIXED_FOODS_AND_DISHES("Diverse matvarer og retter", Category.MIXED),
+    INFANT_FOODS("Spedbarnsmat", Category.MIXED),
+    SUGAR_AND_SWEETS("Sukker og søte produkter", Category.VEGETABLE),
+    FATS_AND_OILS("Spisefett", Category.MIXED);
 
-    private final int mvtId;
     private final String mvtName;
     private final Category category;
 
-    ProductCategory(int mvtId, String mvtName, Category category) {
-        this.mvtId = mvtId;
+    ProductCategory(String mvtName, Category category) {
         this.mvtName = mvtName;
         this.category = category;
     }
 
-    public static ProductCategory fromMvtId(final int mvtId) {
+    public static ProductCategory fromMvtName(final String mvtName) {
         return Arrays.stream(values())
-                .filter(u -> u.mvtId == mvtId)
+                .filter(c -> c.mvtName.equals(mvtName))
                 .findAny()
-                .orElseThrow(() -> new IllegalArgumentException("Product category with id " + mvtId + " not supported"));
+                .orElseThrow(() -> new IllegalArgumentException("Product category '" + mvtName + "' not supported"));
     }
 
     public String getMvtName() {

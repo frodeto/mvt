@@ -17,6 +17,18 @@ class NutrientTest {
         assertEquals(expected, Nutrient.fromMvtName(header));
     }
 
+    @ParameterizedTest
+    @CsvSource(delimiter = ';', value = {"WATER;Vann (g)", "SATURATED_FAT;Mettede fettsyrer (g)", "IRON;Jern (Fe) (mg)",
+            "VITAMIN_A;Vitamin A (RAE) (RAE)", "VITAMIN_E;Vitamin E (mg-ATE)", "COPPER;Kobber (Cu) (mg)"})
+    void hasSpreadsheetColumnName(Nutrient nutrient, String columnName) {
+        assertEquals(columnName, nutrient.getColumnName());
+    }
+
+    @Test
+    void hasUniqueColumnNames() {
+        assertEquals(Nutrient.values().length, Arrays.stream(Nutrient.values()).map(Nutrient::getColumnName).distinct().count());
+    }
+
     @Test
     void mapsCaseInsensitively() {
         assertEquals(Nutrient.WATER, Nutrient.fromMvtName("VANN"));
