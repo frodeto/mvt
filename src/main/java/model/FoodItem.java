@@ -31,6 +31,7 @@ import java.util.Objects;
  */
 public class FoodItem {
     private int id;
+    private String mvtId;
     private String name;
     private ProductSubGroup productSubGroup;
     private Map<Nutrient, Double> nutrientMap;
@@ -39,8 +40,9 @@ public class FoodItem {
     public FoodItem() {
     }
 
-    public FoodItem(int id, String name, ProductSubGroup productSubGroup, Map<Nutrient, Double> nutrientMap, DataSource dataSource) {
+    public FoodItem(int id, String mvtId, String name, ProductSubGroup productSubGroup, Map<Nutrient, Double> nutrientMap, DataSource dataSource) {
         this.id = id;
+        this.mvtId = mvtId;
         this.name = name;
         this.productSubGroup = productSubGroup;
         this.nutrientMap = nutrientMap;
@@ -49,6 +51,13 @@ public class FoodItem {
 
     public int getId() {
         return id;
+    }
+
+    /**
+     * The id used in the source data, e.g. "01.001" in MVT.
+     */
+    public String getMvtId() {
+        return mvtId;
     }
 
     public String getName() {

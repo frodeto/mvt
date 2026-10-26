@@ -21,13 +21,14 @@ import model.FoodItem;
 import java.util.List;
 
 /**
- *
+ * Writes imported food items to a database.
  */
-public interface DbWriter {
+public interface DbWriter extends AutoCloseable {
     DbWriter initDb();
 
     DbWriter writeItems(List<FoodItem> items);
 
+    @Override
     default void close() {
     }
 

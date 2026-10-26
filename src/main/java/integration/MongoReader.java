@@ -28,36 +28,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
 
 /**
- *
+ * Reads food items from the most recent complete Mongo import.
  */
-public class MongoReader implements FoodItemRepository {
-    private static final String TIMESTAMP_KEY = "timestamp";
-    private MongoClient mongoClient;
-    private MongoDatabase mvtDb;
-    private MongoCollection<Document> mvtCollection;
-    private Gson gson = new GsonBuilder().create();
+public class MongoReader implements FoodItemRepository, AutoCloseable {
+    private final MongoClient mongoClient;
+    private final MongoCollection<Document> mvtCollection;
+    private final Gson gson = new GsonBuilder().create();
     private final Logger logger = LoggerFactory.getLogger(MongoReader.class);
 
     public MongoReader() {
         mongoClient = MongoClients.create();
-        findCurrentDb();
+        MongoDatabase mvtDb = findCurrentDb();
+        logger.info("Reading from database {}", mvtDb.getName());
+        mvtCollection = mvtDb.getCollection(Db.MVT_MAIN_TABLE_NAME);
     }
 
     @Override
     public List<FoodItem> findAll() {
         logger.info("Reading {} objects from database", mvtCollection.countDocuments());
-        return mvtCollection.find().into(new ArrayList<>()).stream().map(toFoodItem).collect(Collectors.toList());
+        return mvtCollection.find().map(toFoodItem::apply).into(new ArrayList<>());
     }
 
     @Override
@@ -65,26 +65,29 @@ public class MongoReader implements FoodItemRepository {
         return Optional.ofNullable(mvtCollection.find(eq("id", id)).first()).map(toFoodItem);
     }
 
-    private Function<Document, FoodItem> toFoodItem = document -> gson.fromJson(document.toJson(), FoodItem.class);
-
-    private void findCurrentDb() {
-        LocalDateTime lastTimestamp = LocalDateTime.MIN;
-        for (String databaseName : mongoClient.listDatabaseNames()) {
-            if (databaseName.contains(Db.DB_NAME)) {
-                LocalDateTime fromTimestamp = getTimeStamp(databaseName);
-                if(fromTimestamp.isAfter(lastTimestamp)) {
-                    mvtDb = mongoClient.getDatabase(databaseName);
-                }
-                lastTimestamp = fromTimestamp;
-            }
-        }
-        logger.info("Reading from database {}...", mvtDb.getName());
-        mvtCollection = mvtDb.getCollection(Db.MVT_MAIN_TABLE_NAME);
-        logger.info("collection loaded.");
+    @Override
+    public void close() {
+        mongoClient.close();
     }
 
-    private LocalDateTime getTimeStamp(String databaseName) {
-        String timestamp = (String) mongoClient.getDatabase(databaseName).getCollection(Db.IMPORT).find().first().get(TIMESTAMP_KEY);
-        return LocalDateTime.from(DateTimeFormatter.ISO_LOCAL_DATE_TIME.parse(timestamp));
+    private final Function<Document, FoodItem> toFoodItem = document -> gson.fromJson(document.toJson(), FoodItem.class);
+
+    private MongoDatabase findCurrentDb() {
+        Map<String, LocalDateTime> importTimestamps = new HashMap<>();
+        for (String databaseName : mongoClient.listDatabaseNames()) {
+            if (Db.isMvtDatabase(databaseName)) {
+                Db.importTimestamp(mongoClient, databaseName)
+                        .ifPresent(timestamp -> importTimestamps.put(databaseName, timestamp));
+            }
+        }
+        return newestImport(importTimestamps)
+                .map(mongoClient::getDatabase)
+                .orElseThrow(() -> new IllegalStateException("No mvt database found. Run MvtInitializer to import data."));
+    }
+
+    static Optional<String> newestImport(Map<String, LocalDateTime> importTimestamps) {
+        return importTimestamps.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey);
     }
 }

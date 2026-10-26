@@ -19,7 +19,7 @@ package model;
 import java.util.Arrays;
 
 /**
- * "Nutritients" found in mvt data (including water and enrgy)
+ * "Nutrients" found in mvt data (including water and energy)
  */
 public enum Nutrient {
     // Non-nutrients
@@ -29,7 +29,7 @@ public enum Nutrient {
 
     // Fats
     FAT("Fett", "fat", MvtUnit.GRAMS),
-    SATURATED_FAT("Fett", "saturated fat", MvtUnit.GRAMS),
+    SATURATED_FAT("Mettet", "saturated fat", MvtUnit.GRAMS),
     MONOUNSATURATED_FAT("Enumettet", "monounsaturated fat", MvtUnit.GRAMS),
     POLYUNSATURATED_FAT("Flerumettet", "polyunsaturated fat", MvtUnit.GRAMS),
     TRANS_FAT("Trans", "transfat", MvtUnit.GRAMS),
@@ -41,6 +41,7 @@ public enum Nutrient {
     CARBS("Karbohydrat", "carbohydrates", MvtUnit.GRAMS),
     STARCH("Stivelse", "starch", MvtUnit.GRAMS),
     MONO_AND_DI_SACC("Mono+disakk", "mono- and di-saccharides", MvtUnit.GRAMS),
+    ADDED_SUGAR("Sukker, tilsatt", "added sugar", MvtUnit.GRAMS),
 
     DIETARY_FIBRE("Kostfiber", "dietary fibre", MvtUnit.GRAMS),
 
@@ -60,7 +61,7 @@ public enum Nutrient {
     NIACIN("Niacin", "niacin", MvtUnit.MILLIGRAMS),
     VITAMIN_B6("Vitamin B6", "vitamin B6", MvtUnit.MILLIGRAMS),
     FOLAT("Folat", "folic acid", MvtUnit.MICROGRAMS),
-    VITAMIN_B12("Vitamin B12", "vitamin B12", MvtUnit.ALFA_TE),
+    VITAMIN_B12("Vitamin B12", "vitamin B12", MvtUnit.MICROGRAMS),
     VITAMIN_C("Vitamin C", "vitamin C", MvtUnit.MILLIGRAMS),
     CALCIUM("Kalsium", "calcium", MvtUnit.MILLIGRAMS),
     IRON("Jern", "iron", MvtUnit.MILLIGRAMS),
@@ -88,7 +89,6 @@ public enum Nutrient {
                 .filter(n -> n.mvtName.equalsIgnoreCase(mvtName))
                 .findAny()
                 .orElse(null);
-                //.orElseThrow(() -> new IllegalArgumentException("Nutrient " + mvtName + " not supported"));
     }
 
     public String getMvtName() {
