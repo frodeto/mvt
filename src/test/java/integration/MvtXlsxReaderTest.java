@@ -30,33 +30,33 @@ class MvtXlsxReaderTest {
 
     @Test
     void skipsFooterRows() {
-        assertTrue(allFoodItems.stream().noneMatch(item -> item.getName().isEmpty()));
-        assertTrue(allFoodItems.stream().allMatch(item -> item.getMvtId().matches("\\d{2}\\.\\d{3}")));
+        assertTrue(allFoodItems.stream().noneMatch(item -> item.name().isEmpty()));
+        assertTrue(allFoodItems.stream().allMatch(item -> item.mvtId().matches("\\d{2}\\.\\d{3}")));
     }
 
     @Test
     void keepsSourceIdAndAssignsSequentialIds() {
         FoodItem milk = foodItems.getFirst();
-        assertEquals(1, milk.getId());
-        assertEquals("01.001", milk.getMvtId());
-        assertEquals("Helmelk, 3,5 % fett", milk.getName());
+        assertEquals(1, milk.id());
+        assertEquals("01.001", milk.mvtId());
+        assertEquals("Helmelk, 3,5 % fett", milk.name());
     }
 
     @Test
     void readsNutrientValues() {
         FoodItem milk = byName("Helmelk, 3,5 % fett");
-        assertEquals(87.0, milk.getNutrientMap().get(Nutrient.WATER));
-        assertEquals(262.0, milk.getNutrientMap().get(Nutrient.ENERGY));
-        assertEquals(63.0, milk.getNutrientMap().get(Nutrient.CALORIES));
-        assertEquals(3.5, milk.getNutrientMap().get(Nutrient.FAT));
-        assertEquals(2.3, milk.getNutrientMap().get(Nutrient.SATURATED_FAT));
+        assertEquals(87.0, milk.nutrientMap().get(Nutrient.WATER));
+        assertEquals(262.0, milk.nutrientMap().get(Nutrient.ENERGY));
+        assertEquals(63.0, milk.nutrientMap().get(Nutrient.CALORIES));
+        assertEquals(3.5, milk.nutrientMap().get(Nutrient.FAT));
+        assertEquals(2.3, milk.nutrientMap().get(Nutrient.SATURATED_FAT));
     }
 
     @Test
     void treatsMissingValuesAsAbsent() {
         FoodItem egg = byName("Egg, rå");
-        assertEquals(12.4, egg.getNutrientMap().get(Nutrient.PROTEIN));
-        assertFalse(egg.getNutrientMap().containsKey(Nutrient.OMEGA3));
+        assertEquals(12.4, egg.nutrientMap().get(Nutrient.PROTEIN));
+        assertFalse(egg.nutrientMap().containsKey(Nutrient.OMEGA3));
     }
 
     @Test
@@ -72,25 +72,25 @@ class MvtXlsxReaderTest {
         assertEquals(ProductCategory.BUTTER_AND_OILS, categoryOf(allFoodItems, "Smør"));
         assertEquals(ProductCategory.INFANT_FOODS, categoryOf(allFoodItems, "Morsmelk"));
         assertTrue(allFoodItems.stream().allMatch(item ->
-                item.getProductSubGroup().getProductGroup().getProductCategory() != null));
+                item.productSubGroup().productGroup().productCategory() != null));
     }
 
     @Test
     void usesDeepestGroupLevelAsSubGroup() {
         // 4.1.1 Fet fisk > 4.1.1.1 Fet fisk, rå > 04.001 Blåkveite
-        assertEquals("Fet fisk, rå", byName(allFoodItems, "Blåkveite, rå/kaldrøkt").getProductSubGroup().getName());
+        assertEquals("Fet fisk, rå", byName(allFoodItems, "Blåkveite, rå/kaldrøkt").productSubGroup().name());
     }
 
     @Test
     void readsAddedSugar() {
-        assertEquals(0.0, byName("Helmelk, 3,5 % fett").getNutrientMap().get(Nutrient.ADDED_SUGAR));
+        assertEquals(0.0, byName("Helmelk, 3,5 % fett").nutrientMap().get(Nutrient.ADDED_SUGAR));
     }
 
     @Test
     void assignsSubGroupBelongingToCurrentGroup() {
-        assertEquals("Fjørfe, rå", byName("And, kjøtt med skinn, rå").getProductSubGroup().getName());
+        assertEquals("Fjørfe, rå", byName("And, kjøtt med skinn, rå").productSubGroup().name());
         assertEquals(ProductCategory.EGG,
-                byName("Egg, rå").getProductSubGroup().getProductGroup().getProductCategory());
+                byName("Egg, rå").productSubGroup().productGroup().productCategory());
     }
 
     private static List<FoodItem> read(String resource) throws IOException {
@@ -104,7 +104,7 @@ class MvtXlsxReaderTest {
     }
 
     private static ProductCategory categoryOf(List<FoodItem> items, String name) {
-        return byName(items, name).getProductSubGroup().getProductGroup().getProductCategory();
+        return byName(items, name).productSubGroup().productGroup().productCategory();
     }
 
     private static FoodItem byName(String name) {
@@ -112,7 +112,7 @@ class MvtXlsxReaderTest {
     }
 
     private static FoodItem byName(List<FoodItem> items, String name) {
-        return items.stream().filter(f -> f.getName().equals(name)).findFirst()
+        return items.stream().filter(f -> f.name().equals(name)).findFirst()
                 .orElseThrow(() -> new AssertionError("No food item named " + name));
     }
 }

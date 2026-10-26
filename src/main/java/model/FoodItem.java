@@ -16,8 +16,9 @@
 
 package model;
 
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Structure:
@@ -28,66 +29,17 @@ import java.util.Objects;
  *              |-  {@link FoodItem}
  *
  *  E.g.: [DAIRY] - [Melk og melkeprodukter] - [Ost] - [Ost, ekstra fet] - [Ridderost]
+ *
+ * @param id          sequential id assigned on import
+ * @param mvtId       the id used in the source data, e.g. "01.001" in MVT
+ * @param nutrientMap amount of each nutrient per 100 g; nutrients without a known value are absent
  */
-public class FoodItem {
-    private int id;
-    private String mvtId;
-    private String name;
-    private ProductSubGroup productSubGroup;
-    private Map<Nutrient, Double> nutrientMap;
-    private DataSource dataSource;
+public record FoodItem(int id, String mvtId, String name, ProductSubGroup productSubGroup,
+                       Map<Nutrient, Double> nutrientMap, DataSource dataSource) {
 
-    public FoodItem() {
-    }
-
-    public FoodItem(int id, String mvtId, String name, ProductSubGroup productSubGroup, Map<Nutrient, Double> nutrientMap, DataSource dataSource) {
-        this.id = id;
-        this.mvtId = mvtId;
-        this.name = name;
-        this.productSubGroup = productSubGroup;
-        this.nutrientMap = nutrientMap;
-        this.dataSource = dataSource;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * The id used in the source data, e.g. "01.001" in MVT.
-     */
-    public String getMvtId() {
-        return mvtId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public ProductSubGroup getProductSubGroup() {
-        return productSubGroup;
-    }
-
-    public Map<Nutrient, Double> getNutrientMap() {
-        return nutrientMap;
-    }
-
-    public DataSource getDataSource() {
-        return dataSource;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FoodItem foodItem = (FoodItem) o;
-        return id == foodItem.id &&
-                Objects.equals(name, foodItem.name) &&
-                dataSource == foodItem.dataSource;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, dataSource);
+    public FoodItem {
+        nutrientMap = nutrientMap == null || nutrientMap.isEmpty()
+                ? Map.of()
+                : Collections.unmodifiableMap(new EnumMap<>(nutrientMap));
     }
 }

@@ -16,36 +16,8 @@
 
 package web;
 
-import java.util.Objects;
-
 /**
- *
+ * Short reference to a {@link model.Nutrient}: its id and its name in the MVT data.
  */
-public class NutrientReference {
-    private int id;
-    private String name;
-
-    public NutrientReference(int id, String name) {
-        this.id = id;
-        this.name = name;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        NutrientReference that = (NutrientReference) o;
-        return id == that.id &&
-                Objects.equals(name, that.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name);
-    }
-
-    @Override
-    public String toString() {
-        return "" + id + " " + name;
-    }
+public record NutrientReference(int id, String name) {
 }

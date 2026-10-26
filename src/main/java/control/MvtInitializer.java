@@ -19,6 +19,7 @@ package control;
 import integration.DbWriter;
 import integration.MongoWriter;
 import integration.MvtXlsxReader;
+import integration.MySqlWriter;
 import model.FoodItem;
 
 import java.io.IOException;
@@ -26,21 +27,37 @@ import java.io.InputStream;
 import java.util.List;
 
 /**
- * Reading from sources, populating data storages
+ * Reading from sources, populating data storages.
+ * <p>
+ * Usage: {@code MvtInitializer [mongo|mysql]}, default mongo. Connection settings are read from
+ * environment variables, see {@link Config}.
  */
 public class MvtInitializer {
     private static final String MVT_RESOURCE = "/Matvaretabellen+2015.xlsx";
 
     public static void main(String[] args) throws IOException {
-        List<FoodItem> foodItems;
+        String target = args.length > 0 ? args[0] : "mongo";
+
+        try (DbWriter writer = createWriter(target)) {
+            List<FoodItem> foodItems = readFoodItems();
+            writer.initDb().writeItems(foodItems);
+        }
+    }
+
+    private static List<FoodItem> readFoodItems() throws IOException {
         try (InputStream xlsxInputStream = MvtInitializer.class.getResourceAsStream(MVT_RESOURCE)) {
             if (xlsxInputStream == null) {
                 throw new IllegalStateException("Could not find resource " + MVT_RESOURCE + " on the classpath");
             }
-            foodItems = new MvtXlsxReader(xlsxInputStream).read();
+            return new MvtXlsxReader(xlsxInputStream).read();
         }
-        try (DbWriter writer = new MongoWriter()) {
-            writer.initDb().writeItems(foodItems);
-        }
+    }
+
+    private static DbWriter createWriter(String target) {
+        return switch (target) {
+            case "mongo" -> new MongoWriter(Config.mongoUri());
+            case "mysql" -> new MySqlWriter(Config.mysqlUrl(), Config.mysqlUser(), Config.mysqlPassword());
+            default -> throw new IllegalArgumentException("Unknown target '" + target + "', use mongo or mysql");
+        };
     }
 }

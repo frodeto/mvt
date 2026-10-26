@@ -30,7 +30,7 @@ public enum MvtUnit {
     RAE("RAE"),
     ALFA_TE("alfa-TE");
 
-    private String symbol;
+    private final String symbol;
 
     MvtUnit(String symbol) {
         this.symbol = symbol;

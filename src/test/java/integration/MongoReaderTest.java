@@ -39,9 +39,9 @@ class MongoReaderTest {
         FoodItem restored = gson.fromJson(document.toJson(), FoodItem.class);
 
         assertEquals(egg, restored);
-        assertEquals("02.001", restored.getMvtId());
-        assertEquals(egg.getNutrientMap(), restored.getNutrientMap());
-        assertEquals(subGroup, restored.getProductSubGroup());
+        assertEquals("02.001", restored.mvtId());
+        assertEquals(egg.nutrientMap(), restored.nutrientMap());
+        assertEquals(subGroup, restored.productSubGroup());
         assertEquals(7, document.getInteger("id"));
     }
 

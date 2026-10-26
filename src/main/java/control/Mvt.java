@@ -25,26 +25,25 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import web.MvtServer;
 
 /**
- * Starts the MVT web server. The port is read from the PORT environment variable (default 4567).
+ * Starts the MVT web server. Settings are read from environment variables, see {@link Config}.
  */
 public class Mvt {
     private static final Logger logger = LoggerFactory.getLogger(Mvt.class);
-    private static final int DEFAULT_PORT = 4567;
 
     public static void main(String[] args) throws LifecycleException {
         // Tomcat logs through java.util.logging
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
 
-        int port = Integer.parseInt(System.getenv().getOrDefault("PORT", String.valueOf(DEFAULT_PORT)));
-        MongoReader mongoReader = new MongoReader();
-        MvtServer server = new MvtServer(port, new MvtJAnalyzer(mongoReader.findAll()), mongoReader);
+        MongoReader mongoReader = new MongoReader(Config.mongoUri());
+        MvtServer server = new MvtServer(Config.port(), new MvtJAnalyzer(mongoReader.findAll()), mongoReader);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 server.close();
             } catch (LifecycleException e) {
                 logger.warn("Failed to stop server", e);
             }
+            mongoReader.close();
         }));
         server.start();
         logger.info("MVT server listening on port {}", server.port());

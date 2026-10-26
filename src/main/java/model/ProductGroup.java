@@ -16,8 +16,6 @@
 
 package model;
 
-import java.util.Objects;
-
 /**
  * Structure:
  * {@link Category}
@@ -28,34 +26,5 @@ import java.util.Objects;
  *
  *  E.g.: [DAIRY] - [Melk og melkeprodukter] - [Ost] - [Ost, ekstra fet] - [Ridderost]
  */
-public class ProductGroup {
-    private ProductCategory productCategory;
-    private String name;
-
-    public ProductGroup(ProductCategory productCategory, String name) {
-        this.productCategory = productCategory;
-        this.name = name;
-    }
-
-    public ProductCategory getProductCategory() {
-        return productCategory;
-    }
-
-    private String getName() {
-        return name;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProductGroup)) return false;
-        ProductGroup that = (ProductGroup) o;
-        return getProductCategory() == that.getProductCategory() &&
-                Objects.equals(getName(), that.getName());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getProductCategory(), getName());
-    }
+public record ProductGroup(ProductCategory productCategory, String name) {
 }

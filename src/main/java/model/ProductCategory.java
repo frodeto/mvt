@@ -43,22 +43,21 @@ public enum ProductCategory {
     DISHES_AND_PRODUCTS(10, "Diverse retter, produkter og ingredienser", Category.MIXED),
     INFANT_FOODS(11, "Spedbarnsmat", Category.MIXED);
 
+    private final int mvtId;
+    private final String mvtName;
+    private final Category category;
 
-    private Integer mvtId;
-    private String mvtName;
-    private Category category;
-
-    ProductCategory(Integer mvtId, String mvtName, Category category) {
+    ProductCategory(int mvtId, String mvtName, Category category) {
         this.mvtId = mvtId;
         this.mvtName = mvtName;
         this.category = category;
     }
 
-    public static ProductCategory fromMvtId(final Integer mvtId) {
+    public static ProductCategory fromMvtId(final int mvtId) {
         return Arrays.stream(values())
-                .filter(u -> u.mvtId.equals(mvtId))
+                .filter(u -> u.mvtId == mvtId)
                 .findAny()
-                .orElseThrow(() -> new IllegalArgumentException("Product with id  " + mvtId + " not supported"));
+                .orElseThrow(() -> new IllegalArgumentException("Product category with id " + mvtId + " not supported"));
     }
 
     public String getMvtName() {
